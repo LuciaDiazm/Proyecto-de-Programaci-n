@@ -1,0 +1,20 @@
+# Secretos: solo se versionan los .env.example y los .env.docker de ejemplo
+.env
+firebase-key.json
+
+# Node y React
+node_modules/
+dist/
+coverage/
+
+# Python y Django
+.venv/
+venv/
+__pycache__/
+*.pyc
+db.sqlite3
+staticfiles/
+.coverage
+htmlcov/
+.pytest_cache/
+*.log
