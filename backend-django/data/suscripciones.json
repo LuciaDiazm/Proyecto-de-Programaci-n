@@ -1,0 +1,4 @@
+[
+  {"nombre": "Netflix", "monto": "10.99", "moneda": "USD", "frecuencia": "mensual", "dia_cobro": "12", "categoria": "Streaming", "fecha_inicio": "2025-03-12"},
+  {"nombre": "Spotify", "monto": "4.99", "moneda": "USD", "frecuencia": "mensual", "dia_cobro": "5", "categoria": "Música", "fecha_inicio": "2024-08-05"}
+]

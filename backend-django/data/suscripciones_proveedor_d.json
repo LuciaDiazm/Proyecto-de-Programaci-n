@@ -1,0 +1,4 @@
+[
+  {"nombre": "Crunchyroll", "monto": "5999", "moneda": "ARS", "frecuencia": "mensual", "dia_cobro": 12, "categoria": "Streaming", "fecha_inicio": "2026-01-12"},
+  {"monto": "1000", "moneda": "ARS", "frecuencia": "mensual", "dia_cobro": 5}
+]
