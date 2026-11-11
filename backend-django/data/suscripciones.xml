@@ -1,0 +1,20 @@
+<suscripciones>
+  <suscripcion>
+    <nombre>Google One 2TB</nombre>
+    <monto>99.99</monto>
+    <moneda>USD</moneda>
+    <frecuencia>anual</frecuencia>
+    <dia_cobro>31</dia_cobro>
+    <categoria>Software</categoria>
+    <fecha_inicio>2025-01-31</fecha_inicio>
+  </suscripcion>
+  <suscripcion>
+    <nombre>Diario digital</nombre>
+    <monto>6500</monto>
+    <moneda>ARS</moneda>
+    <frecuencia>mensual</frecuencia>
+    <dia_cobro>20</dia_cobro>
+    <categoria>Educación</categoria>
+    <fecha_inicio>2025-11-20</fecha_inicio>
+  </suscripcion>
+</suscripciones>
