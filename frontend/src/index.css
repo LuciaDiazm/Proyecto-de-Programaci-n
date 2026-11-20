@@ -367,7 +367,7 @@ button {
   width: 27px;
   height: 27px;
   border-radius: 8px;
-  background: var(--color-ficha);
+  overflow: hidden;
   color: #fff;
   font-size: 0.68rem;
   font-weight: 600;
@@ -434,16 +434,17 @@ button {
 
 .cobro:first-child { border-top: none; }
 
-.cobro__sello {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  color: #fff;
-  font-size: 0.72rem;
-  font-weight: 600;
+/* Sello con iniciales y punto de color: el color de la categoría va en el atributo fill del SVG */
+.sello {
+  display: block;
   flex-shrink: 0;
+  font-family: var(--fuente-texto);
+}
+
+.punto-color {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
 }
 
 .cobro__info {
@@ -477,35 +478,44 @@ button {
   white-space: nowrap;
 }
 
-/* Dona de categorías */
-.dona {
-  display: grid;
-  grid-template-columns: minmax(150px, 180px) 1fr;
-  align-items: center;
-  gap: 12px;
-}
-
-.leyenda {
+/* Reparto por categoría y pagos por mes: lista con una barra <meter> debajo de cada fila */
+.reparto {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  font-size: 0.88rem;
+  gap: 12px;
+  font-size: 0.9rem;
 }
 
-.leyenda li {
+.reparto li {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px 8px;
 }
 
-.leyenda__nombre { flex: 1; }
+.reparto__nombre {
+  flex: 1;
+}
 
-.leyenda__valor {
+.reparto__nombre::first-letter { text-transform: uppercase; }
+
+.reparto__monto {
+  color: var(--tinta-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.reparto__valor {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+.reparto__barra {
+  flex-basis: 100%;
+  width: 100%;
+  height: 8px;
 }
 
 /* Aumentos */
@@ -794,6 +804,13 @@ button {
   font-weight: 600;
 }
 
+/* Colores de muestra de la pantalla de ingreso (antes iban en style) */
+.muestra--rosa { background: #E11D48; }
+.muestra--verde { background: #16A34A; }
+.muestra--naranja { background: #EA580C; }
+.muestra--celeste { background: #0891B2; }
+.muestra--violeta { background: #7C3AED; }
+
 .acceso__panel {
   display: grid;
   place-items: center;
@@ -939,7 +956,7 @@ button {
   align-items: flex-start;
   gap: 16px;
   padding-left: 18px;
-  border-left: 5px solid var(--color-ficha);
+  border-left: 5px solid var(--verde);
   margin-bottom: 22px;
 }
 
@@ -1369,7 +1386,6 @@ button {
   .tabla__cuando { grid-area: cuando; flex-direction: row; gap: 8px; align-items: baseline; }
   .tabla__acciones { grid-area: acciones; }
 
-  .dona { grid-template-columns: 1fr; }
   .tira { padding: 18px 14px 14px; border-radius: 16px; }
   .detalle { flex-direction: column; }
 }

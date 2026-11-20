@@ -1,59 +1,88 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { historialService } from '../services/historialService';
-import { suscripcionService } from '../services/suscripcionService';
-import { useDatos } from '../context/DatosContext';
+import { obtenerHistorial } from '../services/historialService';
+import {
+  actualizarSuscripcion,
+  cancelarSuscripcion,
+  obtenerPagosDeSuscripcion,
+  obtenerSuscripcion,
+} from '../services/suscripcionService';
+import { mensajeError } from '../services/api';
 import FormSuscripcion from '../components/FormSuscripcion';
 import ConfirmarPago from '../components/ConfirmarPago';
 import Modal from '../components/Modal';
+import Punto from '../components/Punto';
+import Toast from '../components/Toast';
 import { IconoVolver } from '../components/Iconos';
-import { describirDias, ESTADOS, formatearFecha, formatearMonto, FRECUENCIAS } from '../utils/formato';
+import {
+  colorDeCategoria,
+  describirDias,
+  ESTADOS,
+  formatearFecha,
+  formatearMonto,
+  FRECUENCIAS,
+  nombreDeCategoria,
+} from '../utils/formato';
+
+// Arma la lista de precios: cada cambio registrado en el historial de Node.
+// Si el primer registro es un cambio, se agrega el precio anterior como punto de partida.
+function armarPrecios(historial, suscripcion) {
+  const enMismaMoneda = historial.filter((h) => h.moneda === suscripcion.moneda);
+  const precios = enMismaMoneda.map((h) => ({ fecha: h.createdAt.slice(0, 10), precio: h.precioNuevo }));
+  const primero = enMismaMoneda[0];
+  if (primero && primero.tipo === 'CAMBIO' && primero.precioAnterior !== null && primero.monedaAnterior === suscripcion.moneda) {
+    precios.unshift({ fecha: suscripcion.fecha_inicio, precio: primero.precioAnterior });
+  }
+  return precios;
+}
 
 export default function DetalleSuscripcion() {
   const { id } = useParams();
-  const { mostrarToast, actualizarContador } = useDatos();
   const [suscripcion, setSuscripcion] = useState(null);
   const [pagos, setPagos] = useState([]);
   const [historial, setHistorial] = useState([]);
   const [error, setError] = useState('');
   const [modal, setModal] = useState(null); // 'editar' | 'pagar' | 'cancelar'
+  const [toast, setToast] = useState(null);
 
-  const cargar = useCallback(async () => {
+  useEffect(() => {
+    cargarDatos();
+  }, [id]);
+
+  const cargarDatos = async () => {
     try {
-      const [datos, listaPagos] = await Promise.all([suscripcionService.obtener(id), suscripcionService.pagos(id)]);
+      const [datos, listaPagos] = await Promise.all([obtenerSuscripcion(id), obtenerPagosDeSuscripcion(id)]);
       setSuscripcion(datos);
       setPagos(listaPagos);
       setError('');
-    } catch (e) {
-      setError(e.status === 404 ? 'Esta suscripción no existe o no es tuya.' : e.message);
+    } catch (err) {
+      const noExiste = err.response && err.response.status === 404;
+      setError(noExiste ? 'Esta suscripción no existe o no es tuya.' : mensajeError(err));
     }
     // El historial vive en la otra API: si falla, la página igual se muestra
-    historialService.deSuscripcion(id).then(setHistorial).catch(() => setHistorial([]));
-  }, [id]);
+    obtenerHistorial(id).then(setHistorial).catch(() => setHistorial([]));
+  };
 
-  useEffect(() => {
-    cargar();
-  }, [cargar]);
+  const mostrarToast = (mensaje, tipo = 'ok') => setToast({ mensaje, tipo, id: Date.now() });
 
   const cambiarEstado = async (estado, mensaje) => {
     try {
-      await suscripcionService.actualizar(id, { estado });
+      await actualizarSuscripcion(id, { estado });
       mostrarToast(mensaje);
-      cargar();
-    } catch (e) {
-      mostrarToast(e.message, 'error');
+      cargarDatos();
+    } catch (err) {
+      mostrarToast(mensajeError(err), 'error');
     }
   };
 
   const cancelar = async () => {
     try {
-      await suscripcionService.cancelar(id);
+      await cancelarSuscripcion(id);
       mostrarToast('Suscripción cancelada');
       setModal(null);
-      cargar();
-    } catch (e) {
-      mostrarToast(e.message, 'error');
+      cargarDatos();
+    } catch (err) {
+      mostrarToast(mensajeError(err), 'error');
     }
   };
 
@@ -68,24 +97,19 @@ export default function DetalleSuscripcion() {
   if (!suscripcion) return <div className="esqueleto" aria-busy="true" />;
 
   const s = suscripcion;
-  // Puntos del gráfico: si el primer registro es un cambio, se agrega el precio anterior como punto de partida
-  const enMismaMoneda = historial.filter((h) => h.moneda === s.moneda);
-  const aPunto = (fecha, precio) => ({ fecha: formatearFecha(fecha.slice(0, 10), { month: 'short', year: '2-digit' }), precio });
-  const puntos = enMismaMoneda.map((h) => aPunto(h.createdAt, h.precioNuevo));
-  const primero = enMismaMoneda[0];
-  if (primero?.tipo === 'CAMBIO' && primero.precioAnterior !== null && primero.monedaAnterior === s.moneda) {
-    puntos.unshift(aPunto(s.fecha_inicio, primero.precioAnterior));
-  }
-  const primerPrecio = puntos.length ? puntos[0].precio : null;
+  const precios = armarPrecios(historial, s);
+  const primerPrecio = precios.length ? precios[0].precio : null;
   const aumentoTotal = primerPrecio ? ((s.monto - primerPrecio) / primerPrecio) * 100 : null;
 
   return (
     <>
       <Link to="/suscripciones" className="volver"><IconoVolver /> Suscripciones</Link>
 
-      <header className="detalle" style={{ '--color-ficha': s.categoria_detalle?.color || '#64748B' }}>
+      <header className="detalle">
         <div>
-          <p className="detalle__categoria">{s.categoria_detalle?.nombre || 'Sin categoría'}</p>
+          <p className="detalle__categoria">
+            <Punto color={colorDeCategoria(s)} /> {nombreDeCategoria(s)}
+          </p>
           <h1>{s.nombre}</h1>
           <p className="detalle__precio">
             {formatearMonto(s.monto, s.moneda)} <span>{FRECUENCIAS[s.frecuencia].toLowerCase()}</span>
@@ -157,17 +181,15 @@ export default function DetalleSuscripcion() {
               </span>
             )}
           </div>
-          {puntos.length > 1 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={puntos} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-                <CartesianGrid vertical={false} stroke="var(--linea)" />
-                <XAxis dataKey="fecha" axisLine={false} tickLine={false} tick={{ fill: 'var(--tinta-suave)', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} width={88} tick={{ fill: 'var(--tinta-suave)', fontSize: 12 }}
-                  tickFormatter={(v) => formatearMonto(v, s.moneda, { decimales: false })} />
-                <Tooltip formatter={(v) => [formatearMonto(v, s.moneda), 'Precio']} />
-                <Line type="stepAfter" dataKey="precio" stroke="var(--verde)" strokeWidth={2.5} dot={{ r: 4, fill: 'var(--verde)' }} />
-              </LineChart>
-            </ResponsiveContainer>
+          {precios.length > 1 ? (
+            <ul className="pagos">
+              {precios.map((p, indice) => (
+                <li key={`${p.fecha}-${indice}`}>
+                  <span>{formatearFecha(p.fecha, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  <span className="pagos__monto">{formatearMonto(p.precio, s.moneda)}</span>
+                </li>
+              ))}
+            </ul>
           ) : (
             <p className="texto-suave">
               Todavía no hubo cambios de precio. Cuando edites el monto, cada cambio queda guardado acá.
@@ -203,9 +225,27 @@ export default function DetalleSuscripcion() {
         </section>
       </div>
 
-      {modal === 'editar' && <FormSuscripcion suscripcion={s} alCerrar={() => setModal(null)} alGuardar={() => { setModal(null); cargar(); }} />}
+      {modal === 'editar' && (
+        <FormSuscripcion
+          suscripcion={s}
+          alCerrar={() => setModal(null)}
+          alGuardar={() => {
+            setModal(null);
+            mostrarToast('Cambios guardados');
+            cargarDatos();
+          }}
+        />
+      )}
       {modal === 'pagar' && (
-        <ConfirmarPago suscripcion={s} alCerrar={() => setModal(null)} alConfirmar={() => { setModal(null); cargar(); actualizarContador(); }} />
+        <ConfirmarPago
+          suscripcion={s}
+          alCerrar={() => setModal(null)}
+          alConfirmar={() => {
+            setModal(null);
+            mostrarToast(`Pago de ${s.nombre} registrado`);
+            cargarDatos();
+          }}
+        />
       )}
       {modal === 'cancelar' && (
         <Modal titulo={`¿Cancelar ${s.nombre}?`} alCerrar={() => setModal(null)}>
@@ -216,6 +256,7 @@ export default function DetalleSuscripcion() {
           </div>
         </Modal>
       )}
+      {toast && <Toast key={toast.id} mensaje={toast.mensaje} tipo={toast.tipo} alCerrar={() => setToast(null)} />}
     </>
   );
 }

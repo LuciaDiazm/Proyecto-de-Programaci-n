@@ -1,38 +1,46 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { historialService } from '../services/historialService';
-import { pagoService } from '../services/pagoService';
-import { suscripcionService } from '../services/suscripcionService';
-import { useAuth } from '../context/AuthContext';
-import { useDatos } from '../context/DatosContext';
+import { obtenerUsuario } from '../services/authService';
+import { obtenerDolarTarjeta } from '../services/cotizacionService';
+import { obtenerAumentos } from '../services/historialService';
+import { obtenerPagos, obtenerPagosPorMes } from '../services/pagoService';
+import { obtenerResumen, obtenerSuscripciones } from '../services/suscripcionService';
+import { mensajeError } from '../services/api';
 import TiraDelMes from '../components/TiraDelMes';
 import FilaCobro from '../components/FilaCobro';
 import ConfirmarPago from '../components/ConfirmarPago';
 import FormSuscripcion from '../components/FormSuscripcion';
+import Punto from '../components/Punto';
+import Toast from '../components/Toast';
 import { IconoFlechaArriba, IconoMas } from '../components/Iconos';
 import { formatearFecha, formatearMonto, totalEnPesos } from '../utils/formato';
 
+// Si una de las peticiones falló, se usa un valor vacío para que el resto del panel se vea igual
 const valorOVacio = (resultado, vacio) => (resultado.status === 'fulfilled' ? resultado.value : vacio);
 
 export default function Panel() {
-  const { usuario } = useAuth();
-  const { dolarTarjeta, actualizarContador } = useDatos();
+  const usuario = obtenerUsuario();
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState('');
   const [pagando, setPagando] = useState(null);
   const [creando, setCreando] = useState(false);
+  const [toast, setToast] = useState(null);
 
-  const cargar = useCallback(async () => {
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  const cargarDatos = async () => {
     const resultados = await Promise.allSettled([
-      suscripcionService.resumen(),
-      suscripcionService.listar(),
-      pagoService.listar(),
-      pagoService.porMes(6),
-      historialService.aumentos(),
+      obtenerResumen(),
+      obtenerSuscripciones(),
+      obtenerPagos(),
+      obtenerPagosPorMes(6),
+      obtenerAumentos(),
+      obtenerDolarTarjeta(),
     ]);
     if (resultados[0].status === 'rejected') {
-      setError(resultados[0].reason.message);
+      setError(mensajeError(resultados[0].reason));
       return;
     }
     setError('');
@@ -42,44 +50,38 @@ export default function Panel() {
       pagos: valorOVacio(resultados[2], []),
       porMes: valorOVacio(resultados[3], []),
       aumentos: valorOVacio(resultados[4], []),
+      dolarTarjeta: valorOVacio(resultados[5], null),
     });
-  }, []);
+  };
 
-  useEffect(() => {
-    cargar();
-  }, [cargar]);
+  const mostrarToast = (mensaje) => setToast({ mensaje, id: Date.now() });
+
+  const alGuardarNueva = (guardada) => {
+    setCreando(false);
+    mostrarToast(`${guardada.nombre} agregada`);
+    cargarDatos();
+  };
+
+  const despuesDePagar = () => {
+    mostrarToast(`Pago de ${pagando.nombre} registrado`);
+    setPagando(null);
+    cargarDatos();
+  };
+
+  const primerNombre = usuario.nombre.split(' ')[0];
+  const avisoToast = toast && <Toast key={toast.id} mensaje={toast.mensaje} alCerrar={() => setToast(null)} />;
+  const formNueva = creando && <FormSuscripcion alCerrar={() => setCreando(false)} alGuardar={alGuardarNueva} />;
 
   if (error) return <p className="mensaje mensaje--error">{error}</p>;
   if (!datos) return <div className="esqueleto" aria-busy="true" aria-label="Cargando panel" />;
 
-  const { resumen, suscripciones, pagos, porMes, aumentos } = datos;
-  const mensual = totalEnPesos(resumen.mensual, dolarTarjeta);
-  const anual = totalEnPesos(resumen.anual, dolarTarjeta);
-  const proximos = suscripciones
-    .filter((s) => s.estado === 'activa' && s.dias_para_cobro <= 31)
-    .slice(0, 6);
-
-  const categorias = resumen.por_categoria
-    .map((c) => ({ ...c, total: totalEnPesos(c, dolarTarjeta).pesos }))
-    .filter((c) => c.total > 0)
-    .sort((a, b) => b.total - a.total);
-
-  const barras = porMes.map((m) => ({
-    mes: formatearFecha(`${m.mes}-01`, { month: 'short' }),
-    total: totalEnPesos(m, dolarTarjeta).pesos,
-  }));
-
-  const despuesDePagar = () => {
-    setPagando(null);
-    cargar();
-    actualizarContador();
-  };
+  const { resumen, suscripciones, pagos, porMes, aumentos, dolarTarjeta } = datos;
 
   if (suscripciones.length === 0) {
     return (
       <>
         <header className="encabezado">
-          <h1>Hola, {usuario.nombre.split(' ')[0]}</h1>
+          <h1>Hola, {primerNombre}</h1>
         </header>
         <div className="vacio">
           <h2>Empezá por tu primer gasto fijo</h2>
@@ -88,23 +90,46 @@ export default function Panel() {
             <IconoMas /> Agregar suscripción
           </button>
         </div>
-        {creando && <FormSuscripcion alCerrar={() => setCreando(false)} alGuardar={() => { setCreando(false); cargar(); }} />}
+        {formNueva}
+        {avisoToast}
       </>
     );
+  }
+
+  const mensual = totalEnPesos(resumen.mensual, dolarTarjeta);
+  const anual = totalEnPesos(resumen.anual, dolarTarjeta);
+  const proximos = suscripciones
+    .filter((s) => s.estado === 'activa' && s.dias_para_cobro <= 31)
+    .slice(0, 6);
+
+  // Cuánto se lleva cada categoría del total mensual (de mayor a menor)
+  const categorias = resumen.por_categoria
+    .map((c) => ({ ...c, total: totalEnPesos(c, dolarTarjeta).pesos }))
+    .filter((c) => c.total > 0)
+    .sort((a, b) => b.total - a.total);
+
+  // Lo pagado en cada uno de los últimos meses
+  const meses = porMes.map((m) => ({
+    mes: formatearFecha(`${m.mes}-01`, { month: 'long', year: 'numeric' }),
+    total: totalEnPesos(m, dolarTarjeta).pesos,
+  }));
+  const mesMasCaro = Math.max(...meses.map((m) => m.total), 0);
+
+  let detalleDolares = '';
+  if (mensual.dolaresSinConvertir > 0) {
+    detalleDolares = `más ${formatearMonto(mensual.dolaresSinConvertir, 'USD')} (sin cotización disponible). `;
+  } else if (resumen.mensual.USD > 0) {
+    detalleDolares = `Incluye ${formatearMonto(resumen.mensual.USD, 'USD')} al dólar tarjeta. `;
   }
 
   return (
     <>
       <header className="encabezado encabezado--panel">
         <div>
-          <p className="encabezado__saludo">Hola, {usuario.nombre.split(' ')[0]}. Por mes pagás</p>
+          <p className="encabezado__saludo">Hola, {primerNombre}. Por mes pagás</p>
           <p className="total">{formatearMonto(mensual.pesos, 'ARS', { decimales: false })}</p>
           <p className="texto-suave">
-            {mensual.dolaresSinConvertir > 0
-              ? `más ${formatearMonto(mensual.dolaresSinConvertir, 'USD')} (sin cotización disponible). `
-              : resumen.mensual.USD > 0
-                ? `Incluye ${formatearMonto(resumen.mensual.USD, 'USD')} al dólar tarjeta. `
-                : ''}
+            {detalleDolares}
             {formatearMonto(anual.pesos, 'ARS', { decimales: false })} al año en {resumen.cantidad_activas}{' '}
             {resumen.cantidad_activas === 1 ? 'suscripción activa' : 'suscripciones activas'}.
           </p>
@@ -137,27 +162,20 @@ export default function Panel() {
           <div className="bloque__cabecera">
             <h2>En qué se va</h2>
           </div>
-          <div className="dona">
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <Pie data={categorias} dataKey="total" nameKey="categoria" innerRadius={52} outerRadius={80} paddingAngle={2} stroke="none">
-                  {categorias.map((c) => (
-                    <Cell key={c.categoria} fill={c.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(valor) => formatearMonto(valor, 'ARS', { decimales: false })} />
-              </PieChart>
-            </ResponsiveContainer>
-            <ul className="leyenda">
-              {categorias.map((c) => (
+          <ul className="reparto">
+            {categorias.map((c) => {
+              const porcentaje = Math.round((c.total / mensual.pesos) * 100);
+              return (
                 <li key={c.categoria}>
-                  <span className="punto" style={{ background: c.color }} />
-                  <span className="leyenda__nombre">{c.categoria}</span>
-                  <span className="leyenda__valor">{Math.round((c.total / mensual.pesos) * 100)}%</span>
+                  <Punto color={c.color} />
+                  <span className="reparto__nombre">{c.categoria}</span>
+                  <span className="reparto__monto">{formatearMonto(c.total, 'ARS', { decimales: false })}</span>
+                  <span className="reparto__valor">{porcentaje}%</span>
+                  <meter className="reparto__barra" min="0" max="100" value={porcentaje} aria-label={`${c.categoria}: ${porcentaje}%`} />
                 </li>
-              ))}
-            </ul>
-          </div>
+              );
+            })}
+          </ul>
         </section>
 
         <section className="bloque">
@@ -166,14 +184,15 @@ export default function Panel() {
             <span className="texto-suave">últimos 6 meses</span>
           </div>
           {pagos.length ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={barras} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
-                <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{ fill: 'var(--tinta-suave)', fontSize: 12 }} />
-                <YAxis hide />
-                <Tooltip cursor={{ fill: 'var(--niebla)' }} formatter={(valor) => [formatearMonto(valor, 'ARS', { decimales: false }), 'Pagado']} />
-                <Bar dataKey="total" fill="var(--verde)" radius={[6, 6, 0, 0]} maxBarSize={36} />
-              </BarChart>
-            </ResponsiveContainer>
+            <ul className="reparto">
+              {meses.map((m) => (
+                <li key={m.mes}>
+                  <span className="reparto__nombre">{m.mes}</span>
+                  <span className="reparto__valor">{formatearMonto(m.total, 'ARS', { decimales: false })}</span>
+                  <meter className="reparto__barra" min="0" max={mesMasCaro || 1} value={m.total} aria-label={`${m.mes}: ${formatearMonto(m.total, 'ARS')}`} />
+                </li>
+              ))}
+            </ul>
           ) : (
             <p className="texto-suave">Cuando registres pagos, acá vas a ver cuánto gastaste realmente cada mes.</p>
           )}
@@ -204,7 +223,8 @@ export default function Panel() {
       </div>
 
       {pagando && <ConfirmarPago suscripcion={pagando} alCerrar={() => setPagando(null)} alConfirmar={despuesDePagar} />}
-      {creando && <FormSuscripcion alCerrar={() => setCreando(false)} alGuardar={() => { setCreando(false); cargar(); }} />}
+      {formNueva}
+      {avisoToast}
     </>
   );
 }
