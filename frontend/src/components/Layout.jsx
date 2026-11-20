@@ -1,7 +1,11 @@
-import { NavLink, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useDatos } from '../context/DatosContext';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { logout, obtenerUsuario } from '../services/authService';
+import { obtenerDolarTarjeta } from '../services/cotizacionService';
+import { obtenerNoLeidas } from '../services/notificacionService';
+import { conectarNotificaciones } from '../services/socket';
 import { formatearMonto } from '../utils/formato';
+import Toast from './Toast';
 import {
   IconoCampana,
   IconoChispa,
@@ -15,8 +19,42 @@ import {
 } from './Iconos';
 
 export default function Layout() {
-  const { usuario, cerrarSesion } = useAuth();
-  const { noLeidas, dolarTarjeta } = useDatos();
+  const usuario = obtenerUsuario();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [noLeidas, setNoLeidas] = useState(0);
+  const [dolarTarjeta, setDolarTarjeta] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const actualizarContador = () => {
+    obtenerNoLeidas().then(setNoLeidas).catch(() => {});
+  };
+
+  useEffect(() => {
+    obtenerDolarTarjeta().then(setDolarTarjeta).catch(() => setDolarTarjeta(null));
+  }, []);
+
+  // Módulo 4: Socket.IO avisa al instante cuando llega una notificación nueva
+  useEffect(() => {
+    const desconectar = conectarNotificaciones({
+      alConectar: actualizarContador,
+      alRecibir: (notificacion) => {
+        setNoLeidas((actual) => actual + 1);
+        setToast({ mensaje: notificacion.titulo, id: Date.now() });
+      },
+    });
+    return desconectar;
+  }, []);
+
+  // Al cambiar de pantalla se actualiza el contador (por ejemplo, después de leer avisos)
+  useEffect(() => {
+    actualizarContador();
+  }, [pathname]);
+
+  const cerrarSesion = () => {
+    logout();
+    navigate('/ingresar');
+  };
 
   const enlaces = [
     { a: '/', texto: 'Este mes', Icono: IconoPanel, fin: true },
@@ -60,10 +98,10 @@ export default function Layout() {
           </p>
           <div className="usuario">
             <span className="usuario__avatar" aria-hidden="true">
-              {usuario.nombre?.[0]?.toUpperCase()}
+              {usuario.nombre.charAt(0).toUpperCase()}
             </span>
             <span className="usuario__nombre">{usuario.nombre}</span>
-            <button className="boton-icono" onClick={() => cerrarSesion()} aria-label="Cerrar sesión" title="Cerrar sesión">
+            <button className="boton-icono" onClick={cerrarSesion} aria-label="Cerrar sesión" title="Cerrar sesión">
               <IconoSalir />
             </button>
           </div>
@@ -73,6 +111,8 @@ export default function Layout() {
       <main className="contenido">
         <Outlet />
       </main>
+
+      {toast && <Toast key={toast.id} mensaje={toast.mensaje} alCerrar={() => setToast(null)} />}
     </div>
   );
 }

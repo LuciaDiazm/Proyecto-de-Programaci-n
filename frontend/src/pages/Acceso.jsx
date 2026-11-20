@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { authService } from '../services/authService';
-import { useAuth } from '../context/AuthContext';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { login, registro } from '../services/authService';
+import { mensajeError } from '../services/api';
 
 export default function Acceso({ modo }) {
   const esRegistro = modo === 'registro';
-  const { iniciarSesion, aviso } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ nombre: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -17,16 +17,21 @@ export default function Acceso({ modo }) {
     setError('');
     setEnviando(true);
     try {
-      const datos = esRegistro
-        ? await authService.registro(form)
-        : await authService.login({ email: form.email, password: form.password });
-      iniciarSesion(datos);
+      // El servicio guarda el token y el usuario en localStorage
+      if (esRegistro) {
+        await registro(form);
+      } else {
+        await login(form.email, form.password);
+      }
+      navigate('/');
     } catch (err) {
-      setError(err.message);
-    } finally {
+      setError(mensajeError(err));
       setEnviando(false);
     }
   };
+
+  // Si ya hay sesión iniciada, no tiene sentido mostrar el login
+  if (localStorage.getItem('token')) return <Navigate to="/" replace />;
 
   return (
     <div className="acceso">
@@ -41,18 +46,17 @@ export default function Acceso({ modo }) {
           convierte los cobros en dólares con el dólar tarjeta y te muestra cada aumento.
         </p>
         <ul className="acceso__muestra" aria-hidden="true">
-          <li><span style={{ background: '#E11D48' }}>NE</span>12</li>
-          <li><span style={{ background: '#16A34A' }}>SP</span>15</li>
-          <li className="pronto"><span style={{ background: '#EA580C' }}>GI</span>18</li>
-          <li><span style={{ background: '#0891B2' }}>IN</span>20</li>
-          <li><span style={{ background: '#7C3AED' }}>SE</span>28</li>
+          <li><span className="muestra--rosa">NE</span>12</li>
+          <li><span className="muestra--verde">SP</span>15</li>
+          <li className="pronto"><span className="muestra--naranja">GI</span>18</li>
+          <li><span className="muestra--celeste">IN</span>20</li>
+          <li><span className="muestra--violeta">SE</span>28</li>
         </ul>
       </section>
 
       <section className="acceso__panel">
         <form className="formulario" onSubmit={enviar} noValidate>
           <h2>{esRegistro ? 'Crear cuenta' : 'Ingresar'}</h2>
-          {aviso && !error && <p className="mensaje mensaje--info">{aviso}</p>}
 
           {esRegistro && (
             <label className="campo">

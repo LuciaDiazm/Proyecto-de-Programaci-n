@@ -1,11 +1,13 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { obtenerUsuario } from '../services/authService';
 
-// Módulo 5: las rutas hijas solo se muestran con sesión iniciada
+// Módulo 5: si no hay token, se vuelve al login.
+// Con soloAdmin, además se revisa el rol guardado al iniciar sesión.
 export default function ProtectedRoute({ soloAdmin = false }) {
-  const { usuario } = useAuth();
+  const token = localStorage.getItem('token');
+  const usuario = obtenerUsuario();
 
-  if (!usuario) return <Navigate to="/ingresar" replace />;
+  if (!token || !usuario) return <Navigate to="/ingresar" replace />;
   if (soloAdmin && usuario.rol !== 'ADMIN') return <Navigate to="/" replace />;
 
   return <Outlet />;

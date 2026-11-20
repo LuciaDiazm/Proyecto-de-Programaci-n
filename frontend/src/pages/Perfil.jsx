@@ -1,29 +1,36 @@
 import { useState } from 'react';
-import { authService } from '../services/authService';
-import { useAuth } from '../context/AuthContext';
-import { useDatos } from '../context/DatosContext';
+import { useNavigate } from 'react-router-dom';
+import { actualizarPerfil, logout, obtenerUsuario } from '../services/authService';
+import { mensajeError } from '../services/api';
+import Toast from '../components/Toast';
 
 export default function Perfil() {
-  const { usuario, setUsuario, cerrarSesion } = useAuth();
-  const { mostrarToast } = useDatos();
+  const usuario = obtenerUsuario();
+  const navigate = useNavigate();
   const [nombre, setNombre] = useState(usuario.nombre);
   const [diasAviso, setDiasAviso] = useState(usuario.diasAviso);
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const guardar = async (e) => {
     e.preventDefault();
     setError('');
     setGuardando(true);
     try {
-      const actualizado = await authService.actualizarPerfil({ nombre, diasAviso: Number(diasAviso) });
-      setUsuario(actualizado);
-      mostrarToast('Perfil actualizado');
+      // El servicio también actualiza el usuario guardado en localStorage
+      await actualizarPerfil({ nombre, diasAviso: Number(diasAviso) });
+      setToast({ mensaje: 'Perfil actualizado', id: Date.now() });
     } catch (err) {
-      setError(err.message);
+      setError(mensajeError(err));
     } finally {
       setGuardando(false);
     }
+  };
+
+  const cerrarSesion = () => {
+    logout();
+    navigate('/ingresar');
   };
 
   return (
@@ -52,11 +59,12 @@ export default function Perfil() {
         </label>
         {error && <p className="mensaje mensaje--error" role="alert">{error}</p>}
         <div className="formulario__acciones">
-          <button type="button" className="boton" onClick={() => cerrarSesion()}>Cerrar sesión</button>
+          <button type="button" className="boton" onClick={cerrarSesion}>Cerrar sesión</button>
           <button className="boton boton--primario" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar cambios'}</button>
         </div>
       </form>
       {usuario.rol === 'ADMIN' && <p className="texto-suave">Tu cuenta es de administrador: podés gestionar las categorías.</p>}
+      {toast && <Toast key={toast.id} mensaje={toast.mensaje} alCerrar={() => setToast(null)} />}
     </>
   );
 }
