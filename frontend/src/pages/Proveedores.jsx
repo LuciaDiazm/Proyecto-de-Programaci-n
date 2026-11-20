@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react';
 import ProveedorCard from '../components/ProveedorCard';
-import { useAuth } from '../context/AuthContext';
-import { useDatos } from '../context/DatosContext';
-import proveedorService from '../services/proveedorService';
+import Toast from '../components/Toast';
+import { obtenerUsuario } from '../services/authService';
+import { mensajeError } from '../services/api';
+import {
+  actualizarProveedor,
+  calificarProveedor,
+  crearProveedor,
+  eliminarProveedor,
+  obtenerProveedores,
+} from '../services/proveedorService';
 
 const CATEGORIAS = ['STREAMING', 'SOFTWARE', 'TELEFONIA', 'SERVICIOS', 'OTROS'];
 
@@ -13,26 +20,29 @@ const FORMULARIO_VACIO = {
   categorias: [],
 };
 
+// Módulo 5: la página maneja el estado y llama a los servicios; la tarjeta solo muestra
 export default function Proveedores() {
-  const { usuario } = useAuth();
-  const { mostrarToast } = useDatos();
+  const usuario = obtenerUsuario();
   const [lista, setLista] = useState(null);
   const [formData, setFormData] = useState(FORMULARIO_VACIO);
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState('');
-
-  const cargarDatos = async () => {
-    try {
-      setLista(await proveedorService.obtenerTodos());
-      setError('');
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  const cargarDatos = async () => {
+    try {
+      setLista(await obtenerProveedores());
+      setError('');
+    } catch (err) {
+      setError(mensajeError(err));
+    }
+  };
+
+  const mostrarToast = (mensaje, tipo = 'ok') => setToast({ mensaje, tipo, id: Date.now() });
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -53,32 +63,33 @@ export default function Proveedores() {
   };
 
   const reemplazarEnLista = (actualizado) =>
-    setLista((actual) => actual.map((item) => (item._id === actualizado._id ? actualizado : item)));
+    setLista(lista.map((item) => (item._id === actualizado._id ? actualizado : item)));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     try {
       if (editandoId) {
-        reemplazarEnLista(await proveedorService.actualizar(editandoId, formData));
+        reemplazarEnLista(await actualizarProveedor(editandoId, formData));
         mostrarToast('Proveedor actualizado');
       } else {
-        const nuevo = await proveedorService.crear(formData);
-        setLista((actual) => [...actual, nuevo]);
+        const nuevo = await crearProveedor(formData);
+        setLista([...lista, nuevo]);
         mostrarToast('Proveedor creado');
       }
       limpiarFormulario();
     } catch (err) {
-      setError(err.message);
+      setError(mensajeError(err));
     }
   };
 
   const prepararEdicion = (item) => {
+    const contacto = item.contacto || {};
     setEditandoId(item._id);
     setFormData({
       razonSocial: item.razonSocial,
       cuit: item.cuit,
-      contacto: { email: item.contacto?.email || '', telefono: item.contacto?.telefono || '' },
+      contacto: { email: contacto.email || '', telefono: contacto.telefono || '' },
       categorias: item.categorias || [],
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -87,19 +98,19 @@ export default function Proveedores() {
   const handleBorrar = async (id) => {
     if (!window.confirm('¿Eliminar este proveedor?')) return;
     try {
-      await proveedorService.eliminar(id);
-      setLista((actual) => actual.filter((item) => item._id !== id));
+      await eliminarProveedor(id);
+      setLista(lista.filter((item) => item._id !== id));
       mostrarToast('Proveedor eliminado');
     } catch (err) {
-      mostrarToast(err.message, 'error');
+      mostrarToast(mensajeError(err), 'error');
     }
   };
 
   const handleCalificar = async (id, calificacion) => {
     try {
-      reemplazarEnLista(await proveedorService.calificar(id, calificacion));
+      reemplazarEnLista(await calificarProveedor(id, calificacion));
     } catch (err) {
-      mostrarToast(err.message, 'error');
+      mostrarToast(mensajeError(err), 'error');
     }
   };
 
@@ -153,11 +164,11 @@ export default function Proveedores() {
       </form>
 
       {!lista && !error && <div className="esqueleto" aria-busy="true" />}
-      {lista?.length === 0 && (
+      {lista && lista.length === 0 && (
         <div className="vacio vacio--chico"><p>Todavía no cargaste proveedores.</p></div>
       )}
 
-      {lista?.length > 0 && (
+      {lista && lista.length > 0 && (
         <div className="tarjetas">
           {lista.map((item) => (
             <ProveedorCard
@@ -170,6 +181,8 @@ export default function Proveedores() {
           ))}
         </div>
       )}
+
+      {toast && <Toast key={toast.id} mensaje={toast.mensaje} tipo={toast.tipo} alCerrar={() => setToast(null)} />}
     </>
   );
 }

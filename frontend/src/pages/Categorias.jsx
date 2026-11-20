@@ -1,43 +1,59 @@
-import { useState } from 'react';
-import { categoriaService } from '../services/categoriaService';
-import { useDatos } from '../context/DatosContext';
+import { useEffect, useState } from 'react';
+import { actualizarCategoria, crearCategoria, eliminarCategoria, obtenerCategorias } from '../services/categoriaService';
+import { mensajeError } from '../services/api';
+import Toast from '../components/Toast';
 
 // Solo para ADMIN (Django también lo verifica con el rol del token)
 export default function Categorias() {
-  const { categorias, recargarCategorias, mostrarToast } = useDatos();
+  const [categorias, setCategorias] = useState([]);
   const [nombre, setNombre] = useState('');
   const [color, setColor] = useState('#0E6B57');
   const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  const cargarDatos = async () => {
+    try {
+      setCategorias(await obtenerCategorias());
+    } catch (err) {
+      setError(mensajeError(err));
+    }
+  };
+
+  const mostrarToast = (mensaje, tipo = 'ok') => setToast({ mensaje, tipo, id: Date.now() });
 
   const crear = async (e) => {
     e.preventDefault();
     setError('');
     try {
-      await categoriaService.crear({ nombre, color });
+      await crearCategoria({ nombre, color });
       setNombre('');
       mostrarToast('Categoría creada');
-      recargarCategorias();
+      cargarDatos();
     } catch (err) {
-      setError(err.message);
+      setError(mensajeError(err));
     }
   };
 
   const cambiarColor = async (categoria, nuevoColor) => {
     try {
-      await categoriaService.actualizar(categoria.id, { color: nuevoColor });
-      recargarCategorias();
+      await actualizarCategoria(categoria.id, { color: nuevoColor });
+      cargarDatos();
     } catch (err) {
-      mostrarToast(err.message, 'error');
+      mostrarToast(mensajeError(err), 'error');
     }
   };
 
   const borrar = async (categoria) => {
     try {
-      await categoriaService.borrar(categoria.id);
+      await eliminarCategoria(categoria.id);
       mostrarToast(`${categoria.nombre} borrada`);
-      recargarCategorias();
+      cargarDatos();
     } catch (err) {
-      mostrarToast(err.message, 'error');
+      mostrarToast(mensajeError(err), 'error');
     }
   };
 
@@ -77,6 +93,8 @@ export default function Categorias() {
           </li>
         ))}
       </ul>
+
+      {toast && <Toast key={toast.id} mensaje={toast.mensaje} tipo={toast.tipo} alCerrar={() => setToast(null)} />}
     </>
   );
 }

@@ -1,17 +1,27 @@
-import { useState } from 'react';
-import { suscripcionService } from '../services/suscripcionService';
-import { useDatos } from '../context/DatosContext';
+import { useEffect, useState } from 'react';
+import { obtenerDolarTarjeta } from '../services/cotizacionService';
+import { registrarPago } from '../services/suscripcionService';
+import { mensajeError } from '../services/api';
 import { formatearFecha, formatearMonto, hoyISO } from '../utils/formato';
 import Modal from './Modal';
 
 export default function ConfirmarPago({ suscripcion, alCerrar, alConfirmar }) {
-  const { dolarTarjeta, mostrarToast } = useDatos();
   const esDolar = suscripcion.moneda === 'USD';
   const [monto, setMonto] = useState(String(suscripcion.monto));
   const [fecha, setFecha] = useState(hoyISO());
-  const [cotizacion, setCotizacion] = useState(dolarTarjeta ? String(dolarTarjeta) : '');
+  const [cotizacion, setCotizacion] = useState('');
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
+
+  // Si se paga en dólares, se completa la cotización con el dólar tarjeta del día
+  useEffect(() => {
+    if (!esDolar) return;
+    obtenerDolarTarjeta()
+      .then((valor) => {
+        if (valor) setCotizacion(String(valor));
+      })
+      .catch(() => {});
+  }, []);
 
   const enviar = async (e) => {
     e.preventDefault();
@@ -20,11 +30,10 @@ export default function ConfirmarPago({ suscripcion, alCerrar, alConfirmar }) {
     const datos = { monto: monto.replace(',', '.'), fecha_pago: fecha };
     if (esDolar && cotizacion) datos.cotizacion = cotizacion.replace(',', '.');
     try {
-      const resultado = await suscripcionService.registrarPago(suscripcion.id, datos);
-      mostrarToast(`Pago de ${suscripcion.nombre} registrado`);
+      const resultado = await registrarPago(suscripcion.id, datos);
       alConfirmar(resultado);
     } catch (err) {
-      setError(err.message);
+      setError(mensajeError(err));
       setEnviando(false);
     }
   };
@@ -41,7 +50,7 @@ export default function ConfirmarPago({ suscripcion, alCerrar, alConfirmar }) {
         <div className="formulario__fila">
           <label className="campo">
             <span>Monto cobrado ({suscripcion.moneda})</span>
-            <input value={monto} onChange={(e) => setMonto(e.target.value)} inputMode="decimal" required />
+            <input value={monto} onChange={(e) => setMonto(e.target.value)} inputMode="decimal" autoFocus required />
           </label>
           <label className="campo">
             <span>Fecha de pago</span>

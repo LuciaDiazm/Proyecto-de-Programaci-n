@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useDatos } from '../context/DatosContext';
-import { grupoService } from '../services/grupoService';
+import { crearGrupo, obtenerGrupos } from '../services/grupoService';
+import { mensajeError } from '../services/api';
+import Toast from '../components/Toast';
 
 const FORMULARIO_VACIO = { nombre: '', descripcion: '' };
 
 export default function Grupos() {
-  const { mostrarToast } = useDatos();
   const [grupos, setGrupos] = useState(null);
   const [formData, setFormData] = useState(FORMULARIO_VACIO);
   const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    grupoService.listar().then(setGrupos).catch((err) => setError(err.message));
+    obtenerGrupos()
+      .then(setGrupos)
+      .catch((err) => setError(mensajeError(err)));
   }, []);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,12 +24,12 @@ export default function Grupos() {
     e.preventDefault();
     setError('');
     try {
-      const nuevo = await grupoService.crear(formData);
-      setGrupos((actual) => [...actual, nuevo]);
+      const nuevo = await crearGrupo(formData);
+      setGrupos([...grupos, nuevo]);
       setFormData(FORMULARIO_VACIO);
-      mostrarToast('Grupo creado');
+      setToast({ mensaje: 'Grupo creado', id: Date.now() });
     } catch (err) {
-      setError(err.message);
+      setError(mensajeError(err));
     }
   };
 
@@ -53,11 +56,11 @@ export default function Grupos() {
       </form>
 
       {!grupos && !error && <div className="esqueleto" aria-busy="true" />}
-      {grupos?.length === 0 && (
+      {grupos && grupos.length === 0 && (
         <div className="vacio vacio--chico"><p>Todavía no formás parte de ningún grupo.</p></div>
       )}
 
-      {grupos?.length > 0 && (
+      {grupos && grupos.length > 0 && (
         <div className="tarjetas">
           {grupos.map((grupo) => (
             <article className="tarjeta" key={grupo.id}>
@@ -70,6 +73,8 @@ export default function Grupos() {
           ))}
         </div>
       )}
+
+      {toast && <Toast key={toast.id} mensaje={toast.mensaje} alCerrar={() => setToast(null)} />}
     </>
   );
 }

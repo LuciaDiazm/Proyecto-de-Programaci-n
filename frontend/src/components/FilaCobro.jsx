@@ -1,14 +1,13 @@
 import { Link } from 'react-router-dom';
-import { describirDias, estadoDeCobro, formatearFecha, formatearMonto, iniciales } from '../utils/formato';
+import { colorDeCategoria, describirDias, estadoDeCobro, formatearFecha, formatearMonto } from '../utils/formato';
 import { IconoCheck } from './Iconos';
+import Sello from './Sello';
 
 export default function FilaCobro({ suscripcion, alPagar }) {
   const estado = estadoDeCobro(suscripcion.dias_para_cobro);
   return (
     <li className={`cobro cobro--${estado}`}>
-      <span className="cobro__sello" style={{ background: suscripcion.categoria_detalle?.color || '#64748B' }} aria-hidden="true">
-        {iniciales(suscripcion.nombre)}
-      </span>
+      <Sello nombre={suscripcion.nombre} color={colorDeCategoria(suscripcion)} />
       <div className="cobro__info">
         <Link to={`/suscripciones/${suscripcion.id}`} className="cobro__nombre">{suscripcion.nombre}</Link>
         <span className="cobro__cuando">

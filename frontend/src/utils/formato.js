@@ -1,8 +1,9 @@
 // Funciones de formato para mostrar montos y fechas al estilo argentino
 
-export function formatearMonto(monto, moneda = 'ARS', { decimales } = {}) {
+export function formatearMonto(monto, moneda = 'ARS', opciones = {}) {
   const numero = Number(monto) || 0;
-  const usarDecimales = decimales ?? (moneda === 'USD' || !Number.isInteger(numero));
+  let usarDecimales = moneda === 'USD' || !Number.isInteger(numero);
+  if (opciones.decimales !== undefined) usarDecimales = opciones.decimales;
   const texto = numero.toLocaleString('es-AR', {
     minimumFractionDigits: usarDecimales ? 2 : 0,
     maximumFractionDigits: usarDecimales ? 2 : 0,
@@ -38,10 +39,21 @@ export const ESTADOS = { activa: 'Activa', pausada: 'Pausada', cancelada: 'Cance
 
 // Convierte un total separado por moneda a pesos usando la cotización (si hay)
 export function totalEnPesos(totales, cotizacion) {
-  const ars = Number(totales?.ARS) || 0;
-  const usd = Number(totales?.USD) || 0;
+  const ars = totales ? Number(totales.ARS) || 0 : 0;
+  const usd = totales ? Number(totales.USD) || 0 : 0;
   if (!cotizacion) return { pesos: ars, dolaresSinConvertir: usd };
   return { pesos: ars + usd * cotizacion, dolaresSinConvertir: 0 };
+}
+
+// Una suscripción puede no tener categoría: en ese caso se usa gris y "Sin categoría"
+export const COLOR_SIN_CATEGORIA = '#64748B';
+
+export function colorDeCategoria(suscripcion) {
+  return suscripcion.categoria_detalle ? suscripcion.categoria_detalle.color : COLOR_SIN_CATEGORIA;
+}
+
+export function nombreDeCategoria(suscripcion) {
+  return suscripcion.categoria_detalle ? suscripcion.categoria_detalle.nombre : 'Sin categoría';
 }
 
 export function iniciales(nombre) {

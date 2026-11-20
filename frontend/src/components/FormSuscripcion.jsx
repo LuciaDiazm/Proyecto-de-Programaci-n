@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { grupoService } from '../services/grupoService';
-import { suscripcionService } from '../services/suscripcionService';
-import { useDatos } from '../context/DatosContext';
+import { obtenerCategorias } from '../services/categoriaService';
+import { obtenerGrupos } from '../services/grupoService';
+import { actualizarSuscripcion, crearSuscripcion } from '../services/suscripcionService';
+import { mensajeError } from '../services/api';
 import { hoyISO } from '../utils/formato';
 import Modal from './Modal';
 
@@ -17,31 +18,33 @@ const VACIO = {
   descripcion: '',
 };
 
+// Arma el formulario con los datos de la suscripción que se está editando
+const desdeSuscripcion = (suscripcion) => ({
+  nombre: suscripcion.nombre,
+  monto: String(suscripcion.monto),
+  moneda: suscripcion.moneda,
+  frecuencia: suscripcion.frecuencia,
+  dia_cobro: String(suscripcion.dia_cobro),
+  fecha_inicio: suscripcion.fecha_inicio,
+  categoria: suscripcion.categoria ? String(suscripcion.categoria) : '',
+  grupo: suscripcion.grupo ? String(suscripcion.grupo) : '',
+  descripcion: suscripcion.descripcion,
+});
+
 export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
   const editando = Boolean(suscripcion);
-  const { categorias, mostrarToast } = useDatos();
-  const [form, setForm] = useState(() =>
-    editando
-      ? {
-          nombre: suscripcion.nombre,
-          monto: String(suscripcion.monto),
-          moneda: suscripcion.moneda,
-          frecuencia: suscripcion.frecuencia,
-          dia_cobro: String(suscripcion.dia_cobro),
-          fecha_inicio: suscripcion.fecha_inicio,
-          categoria: suscripcion.categoria ? String(suscripcion.categoria) : '',
-          grupo: suscripcion.grupo ? String(suscripcion.grupo) : '',
-          descripcion: suscripcion.descripcion,
-        }
-      : VACIO
-  );
+  const [form, setForm] = useState(editando ? desdeSuscripcion(suscripcion) : VACIO);
+  const [categorias, setCategorias] = useState([]);
+  const [grupos, setGrupos] = useState([]);
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
-  const [grupos, setGrupos] = useState([]);
 
-  // Solo un admin del grupo puede compartir suscripciones en él
   useEffect(() => {
-    grupoService.listar().then((lista) => setGrupos(lista.filter((g) => g.mi_rol === 'admin'))).catch(() => {});
+    obtenerCategorias().then(setCategorias).catch(() => {});
+    // Solo un admin del grupo puede compartir suscripciones en él
+    obtenerGrupos()
+      .then((lista) => setGrupos(lista.filter((g) => g.mi_rol === 'admin')))
+      .catch(() => {});
   }, []);
 
   const cambiar = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -59,12 +62,11 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
     };
     try {
       const guardada = editando
-        ? await suscripcionService.actualizar(suscripcion.id, datos)
-        : await suscripcionService.crear(datos);
-      mostrarToast(editando ? 'Cambios guardados' : `${guardada.nombre} agregada`);
+        ? await actualizarSuscripcion(suscripcion.id, datos)
+        : await crearSuscripcion(datos);
       alGuardar(guardada);
     } catch (err) {
-      setError(err.message);
+      setError(mensajeError(err));
       setGuardando(false);
     }
   };
@@ -74,7 +76,7 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
       <form className="formulario formulario--grilla" onSubmit={enviar}>
         <label className="campo campo--doble">
           <span>Nombre</span>
-          <input name="nombre" value={form.nombre} onChange={cambiar} placeholder="Netflix, gimnasio, seguro del auto…" required />
+          <input name="nombre" value={form.nombre} onChange={cambiar} placeholder="Netflix, gimnasio, seguro del auto…" autoFocus required />
         </label>
 
         <label className="campo">

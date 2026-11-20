@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { IconoVolver } from '../components/Iconos';
-import { useDatos } from '../context/DatosContext';
-import { obtenerTokenVigente, WS_URL } from '../services/api';
-import { grupoService } from '../services/grupoService';
-import { suscripcionService } from '../services/suscripcionService';
+import Toast from '../components/Toast';
+import { mensajeError, WS_URL } from '../services/api';
+import { agregarMiembro, obtenerGrupo, obtenerResumenGrupo } from '../services/grupoService';
+import { obtenerSuscripcionesDeGrupo } from '../services/suscripcionService';
 import { conectarProyecto } from '../services/tiempoReal';
 import { formatearMonto } from '../utils/formato';
 
@@ -23,7 +23,6 @@ const TEXTOS_CONEXION = {
 
 export default function DetalleGrupo() {
   const { id } = useParams();
-  const { mostrarToast } = useDatos();
   const [grupo, setGrupo] = useState(null);
   const [resumen, setResumen] = useState(null);
   const [suscripciones, setSuscripciones] = useState([]);
@@ -32,31 +31,33 @@ export default function DetalleGrupo() {
   const [conexion, setConexion] = useState('conectando');
   const [formData, setFormData] = useState({ usuario: '', rol: 'miembro' });
   const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
 
-  const cargar = useCallback(async () => {
+  const cargarDatos = async () => {
     try {
       const [datosGrupo, datosResumen, lista] = await Promise.all([
-        grupoService.obtener(id),
-        grupoService.resumen(id),
-        suscripcionService.deGrupo(id),
+        obtenerGrupo(id),
+        obtenerResumenGrupo(id),
+        obtenerSuscripcionesDeGrupo(id),
       ]);
       setGrupo(datosGrupo);
       setResumen(datosResumen);
       setSuscripciones(lista);
       setError('');
     } catch (err) {
-      setError(err.status === 404 ? 'Este grupo no existe o no sos miembro.' : err.message);
+      const noExiste = err.response && err.response.status === 404;
+      setError(noExiste ? 'Este grupo no existe o no sos miembro.' : mensajeError(err));
     }
-  }, [id]);
+  };
 
+  // Al entrar se cargan los datos y se abre el WebSocket del grupo (Channels, Django)
   useEffect(() => {
-    cargar();
+    cargarDatos();
 
     const conexionWs = conectarProyecto({
       url: `${WS_URL}/ws/grupos/${id}/`,
-      obtenerToken: obtenerTokenVigente,
       alCambiarEstado: setConexion,
-      alReconectar: cargar, // Resincroniza por REST lo que se perdió durante el corte
+      alReconectar: cargarDatos, // Recupera por REST lo que se perdió durante el corte
       alRecibir: (mensaje) => {
         if (mensaje.event === 'presencia') {
           setEnLinea((actual) =>
@@ -70,25 +71,25 @@ export default function DetalleGrupo() {
           setActividad((actual) =>
             [{ id: crypto.randomUUID(), texto: TEXTOS_EVENTO[mensaje.event] }, ...actual].slice(0, 8)
           );
-          cargar();
+          cargarDatos();
         }
       },
     });
 
     return () => conexionWs.cerrar();
-  }, [id, cargar]);
+  }, [id]);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleAgregar = async (e) => {
     e.preventDefault();
     try {
-      const miembro = await grupoService.agregarMiembro(id, formData);
+      const miembro = await agregarMiembro(id, formData);
       setFormData({ usuario: '', rol: 'miembro' });
-      mostrarToast(`${miembro.alias} ahora es parte del grupo`);
-      cargar();
+      setToast({ mensaje: `${miembro.alias} ahora es parte del grupo`, id: Date.now() });
+      cargarDatos();
     } catch (err) {
-      mostrarToast(err.message, 'error');
+      setToast({ mensaje: mensajeError(err), tipo: 'error', id: Date.now() });
     }
   };
 
@@ -184,6 +185,8 @@ export default function DetalleGrupo() {
           )}
         </section>
       </div>
+
+      {toast && <Toast key={toast.id} mensaje={toast.mensaje} tipo={toast.tipo} alCerrar={() => setToast(null)} />}
     </>
   );
 }

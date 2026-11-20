@@ -2,15 +2,18 @@
 const ESTRELLAS = [1, 2, 3, 4, 5];
 
 export default function ProveedorCard({ item, onEdit, onDelete, onCalificar }) {
+  const contacto = item.contacto || {};
+  const categorias = item.categorias || [];
+
   return (
     <article className="tarjeta">
       <h3 className="tarjeta__titulo">{item.razonSocial}</h3>
       <p className="texto-suave">CUIT {item.cuit}</p>
-      <p className="texto-suave">{item.contacto?.email}{item.contacto?.telefono ? ` · ${item.contacto.telefono}` : ''}</p>
+      <p className="texto-suave">{contacto.email}{contacto.telefono ? ` · ${contacto.telefono}` : ''}</p>
 
-      {item.categorias?.length > 0 && (
+      {categorias.length > 0 && (
         <ul className="insignias">
-          {item.categorias.map((categoria) => <li key={categoria}>{categoria.toLowerCase()}</li>)}
+          {categorias.map((categoria) => <li key={categoria}>{categoria.toLowerCase()}</li>)}
         </ul>
       )}
 

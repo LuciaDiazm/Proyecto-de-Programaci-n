@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { notificacionService } from '../services/notificacionService';
-import { useAuth } from '../context/AuthContext';
-import { useDatos } from '../context/DatosContext';
+import { marcarLeida, marcarTodasLeidas, obtenerNotificaciones, revisarCobros } from '../services/notificacionService';
+import { obtenerUsuario } from '../services/authService';
+import { mensajeError } from '../services/api';
+import Toast from '../components/Toast';
 
 const TIPOS = {
   COBRO_PROXIMO: 'pronto',
@@ -22,46 +23,45 @@ function haceCuanto(fechaISO) {
 }
 
 export default function Avisos() {
-  const { usuario } = useAuth();
-  const { actualizarContador, mostrarToast } = useDatos();
+  const usuario = obtenerUsuario();
   const [avisos, setAvisos] = useState(null);
   const [error, setError] = useState('');
-
-  const cargar = useCallback(() => {
-    notificacionService
-      .listar()
-      .then(setAvisos)
-      .catch((e) => setError(e.message));
-    actualizarContador();
-  }, [actualizarContador]);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    cargar();
-  }, [cargar]);
+    cargarDatos();
+  }, []);
+
+  const cargarDatos = async () => {
+    try {
+      setAvisos(await obtenerNotificaciones());
+    } catch (err) {
+      setError(mensajeError(err));
+    }
+  };
 
   const marcar = async (aviso) => {
     if (aviso.leida) return;
-    setAvisos((lista) => lista.map((a) => (a._id === aviso._id ? { ...a, leida: true } : a)));
-    await notificacionService.marcarLeida(aviso._id).catch(() => {});
-    actualizarContador();
+    setAvisos(avisos.map((a) => (a._id === aviso._id ? { ...a, leida: true } : a)));
+    await marcarLeida(aviso._id).catch(() => {});
   };
 
   const marcarTodas = async () => {
-    await notificacionService.marcarTodas();
-    cargar();
+    await marcarTodasLeidas();
+    cargarDatos();
   };
 
   const revisarAhora = async () => {
     try {
-      const r = await notificacionService.revisar();
-      mostrarToast(`Revisión lista: ${r.nuevas} avisos nuevos`);
-      cargar();
-    } catch (e) {
-      mostrarToast(e.message, 'error');
+      const resultado = await revisarCobros();
+      setToast({ mensaje: `Revisión lista: ${resultado.nuevas} avisos nuevos`, id: Date.now() });
+      cargarDatos();
+    } catch (err) {
+      setToast({ mensaje: mensajeError(err), tipo: 'error', id: Date.now() });
     }
   };
 
-  const hayNoLeidas = avisos?.some((a) => !a.leida);
+  const hayNoLeidas = avisos !== null && avisos.some((a) => !a.leida);
 
   return (
     <>
@@ -82,13 +82,13 @@ export default function Avisos() {
       {error && <p className="mensaje mensaje--error">{error}</p>}
       {!avisos && !error && <div className="esqueleto" aria-busy="true" />}
 
-      {avisos?.length === 0 && (
+      {avisos && avisos.length === 0 && (
         <div className="vacio vacio--chico">
           <p>No hay avisos. Cuando se acerque un cobro o aumente un precio, lo vas a ver acá.</p>
         </div>
       )}
 
-      {avisos?.length > 0 && (
+      {avisos && avisos.length > 0 && (
         <ul className="avisos">
           {avisos.map((a) => (
             <li key={a._id} className={`aviso aviso--${TIPOS[a.tipo]} ${a.leida ? 'aviso--leido' : ''}`}>
@@ -104,6 +104,8 @@ export default function Avisos() {
           ))}
         </ul>
       )}
+
+      {toast && <Toast key={toast.id} mensaje={toast.mensaje} tipo={toast.tipo} alCerrar={() => setToast(null)} />}
     </>
   );
 }

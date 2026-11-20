@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { iaService } from '../services/iaService';
+import { analizarGastos, obtenerUltimoAnalisis } from '../services/iaService';
+import { mensajeError } from '../services/api';
 import { formatearMonto } from '../utils/formato';
 
 const ACCIONES = {
@@ -15,8 +16,7 @@ export default function Asesor() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    iaService
-      .ultimo()
+    obtenerUltimoAnalisis()
       .then(setAnalisis)
       .catch(() => setAnalisis(null))
       .finally(() => setCargandoUltimo(false));
@@ -26,15 +26,15 @@ export default function Asesor() {
     setError('');
     setAnalizando(true);
     try {
-      setAnalisis(await iaService.analizar());
+      setAnalisis(await analizarGastos());
     } catch (e) {
-      setError(e.message);
+      setError(mensajeError(e));
     } finally {
       setAnalizando(false);
     }
   };
 
-  const r = analisis?.resultado;
+  const r = analisis ? analisis.resultado : null;
   const fecha = analisis
     ? new Date(analisis.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
     : null;

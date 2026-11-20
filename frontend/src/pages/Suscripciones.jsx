@@ -1,11 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { suscripcionService } from '../services/suscripcionService';
-import { useDatos } from '../context/DatosContext';
+import { obtenerSuscripciones } from '../services/suscripcionService';
+import { mensajeError } from '../services/api';
 import FormSuscripcion from '../components/FormSuscripcion';
 import ConfirmarPago from '../components/ConfirmarPago';
+import Sello from '../components/Sello';
+import Toast from '../components/Toast';
 import { IconoCheck, IconoMas } from '../components/Iconos';
-import { describirDias, estadoDeCobro, formatearFecha, formatearMonto, FRECUENCIAS, iniciales } from '../utils/formato';
+import {
+  colorDeCategoria,
+  describirDias,
+  estadoDeCobro,
+  formatearFecha,
+  formatearMonto,
+  FRECUENCIAS,
+  nombreDeCategoria,
+} from '../utils/formato';
 
 const PESTANAS = [
   { valor: 'activa', texto: 'Activas' },
@@ -13,8 +23,17 @@ const PESTANAS = [
   { valor: 'cancelada', texto: 'Canceladas' },
 ];
 
+const COMPARADORES = {
+  proximo: (a, b) => a.proxima_fecha_cobro.localeCompare(b.proxima_fecha_cobro),
+  nombre: (a, b) => a.nombre.localeCompare(b.nombre),
+  // Ordena por costo mensual (los dólares se comparan aparte y quedan arriba)
+  monto: (a, b) => {
+    if (a.moneda === b.moneda) return b.costo_mensual - a.costo_mensual;
+    return a.moneda === 'USD' ? -1 : 1;
+  },
+};
+
 export default function Suscripciones() {
-  const { actualizarContador } = useDatos();
   const [todas, setTodas] = useState(null);
   const [error, setError] = useState('');
   const [estado, setEstado] = useState('activa');
@@ -22,39 +41,31 @@ export default function Suscripciones() {
   const [orden, setOrden] = useState('proximo');
   const [creando, setCreando] = useState(false);
   const [pagando, setPagando] = useState(null);
-
-  const cargar = useCallback(() => {
-    suscripcionService
-      .listar(true)
-      .then((lista) => {
-        setTodas(lista);
-        setError('');
-      })
-      .catch((e) => setError(e.message));
-  }, []);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    cargar();
-  }, [cargar]);
+    cargarDatos();
+  }, []);
 
-  const visibles = useMemo(() => {
-    if (!todas) return [];
-    const texto = busqueda.trim().toLowerCase();
-    const lista = todas.filter(
-      (s) =>
-        s.estado === estado &&
-        (!texto || s.nombre.toLowerCase().includes(texto) || s.categoria_detalle?.nombre.toLowerCase().includes(texto))
-    );
-    const comparadores = {
-      proximo: (a, b) => a.proxima_fecha_cobro.localeCompare(b.proxima_fecha_cobro),
-      nombre: (a, b) => a.nombre.localeCompare(b.nombre),
-      // Ordena por costo mensual (los dólares se comparan aparte, quedan arriba)
-      monto: (a, b) => (b.moneda === a.moneda ? b.costo_mensual - a.costo_mensual : a.moneda === 'USD' ? -1 : 1),
-    };
-    return [...lista].sort(comparadores[orden]);
-  }, [todas, estado, busqueda, orden]);
+  const cargarDatos = async () => {
+    try {
+      setTodas(await obtenerSuscripciones(true));
+      setError('');
+    } catch (err) {
+      setError(mensajeError(err));
+    }
+  };
 
-  const cantidad = (valor) => todas?.filter((s) => s.estado === valor).length ?? 0;
+  const mostrarToast = (mensaje) => setToast({ mensaje, id: Date.now() });
+
+  // Filtra por pestaña y búsqueda, y ordena según lo elegido
+  const texto = busqueda.trim().toLowerCase();
+  const coincide = (s) =>
+    !texto || s.nombre.toLowerCase().includes(texto) || nombreDeCategoria(s).toLowerCase().includes(texto);
+  const lista = todas ? todas : [];
+  const visibles = lista.filter((s) => s.estado === estado && coincide(s)).sort(COMPARADORES[orden]);
+
+  const cantidad = (valor) => lista.filter((s) => s.estado === valor).length;
 
   return (
     <>
@@ -123,12 +134,10 @@ export default function Suscripciones() {
           {visibles.map((s) => (
             <li key={s.id} className="tabla__fila">
               <span className="tabla__servicio">
-                <span className="cobro__sello" style={{ background: s.categoria_detalle?.color || '#64748B' }} aria-hidden="true">
-                  {iniciales(s.nombre)}
-                </span>
+                <Sello nombre={s.nombre} color={colorDeCategoria(s)} />
                 <span>
                   <Link to={`/suscripciones/${s.id}`} className="tabla__nombre">{s.nombre}</Link>
-                  <span className="texto-suave">{s.categoria_detalle?.nombre || 'Sin categoría'} · {FRECUENCIAS[s.frecuencia]}</span>
+                  <span className="texto-suave">{nombreDeCategoria(s)} · {FRECUENCIAS[s.frecuencia]}</span>
                 </span>
               </span>
               <span className="tabla__monto">{formatearMonto(s.monto, s.moneda)}</span>
@@ -155,14 +164,28 @@ export default function Suscripciones() {
         </ul>
       )}
 
-      {creando && <FormSuscripcion alCerrar={() => setCreando(false)} alGuardar={() => { setCreando(false); cargar(); }} />}
+      {creando && (
+        <FormSuscripcion
+          alCerrar={() => setCreando(false)}
+          alGuardar={(guardada) => {
+            setCreando(false);
+            mostrarToast(`${guardada.nombre} agregada`);
+            cargarDatos();
+          }}
+        />
+      )}
       {pagando && (
         <ConfirmarPago
           suscripcion={pagando}
           alCerrar={() => setPagando(null)}
-          alConfirmar={() => { setPagando(null); cargar(); actualizarContador(); }}
+          alConfirmar={() => {
+            mostrarToast(`Pago de ${pagando.nombre} registrado`);
+            setPagando(null);
+            cargarDatos();
+          }}
         />
       )}
+      {toast && <Toast key={toast.id} mensaje={toast.mensaje} alCerrar={() => setToast(null)} />}
     </>
   );
 }
