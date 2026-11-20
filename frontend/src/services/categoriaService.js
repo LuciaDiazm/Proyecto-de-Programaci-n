@@ -1,8 +1,23 @@
 import { apiDjango, resultados } from './api';
 
-export const categoriaService = {
-  listar: async () => resultados((await apiDjango.get('/api/categorias/')).data),
-  crear: async (datos) => (await apiDjango.post('/api/categorias/', datos)).data,
-  actualizar: async (id, datos) => (await apiDjango.patch(`/api/categorias/${id}/`, datos)).data,
-  borrar: async (id) => (await apiDjango.delete(`/api/categorias/${id}/`)).data,
+const CATEGORIAS_URL = '/api/categorias/';
+
+export const obtenerCategorias = async () => {
+  const respuesta = await apiDjango.get(CATEGORIAS_URL);
+  return resultados(respuesta.data);
+};
+
+export const crearCategoria = async (datos) => {
+  const respuesta = await apiDjango.post(CATEGORIAS_URL, datos);
+  return respuesta.data;
+};
+
+export const actualizarCategoria = async (id, datos) => {
+  const respuesta = await apiDjango.patch(`${CATEGORIAS_URL}${id}/`, datos);
+  return respuesta.data;
+};
+
+export const eliminarCategoria = async (id) => {
+  const respuesta = await apiDjango.delete(`${CATEGORIAS_URL}${id}/`);
+  return respuesta.data;
 };

@@ -1,6 +1,11 @@
 import { apiDjango, resultados } from './api';
 
-export const pagoService = {
-  listar: async () => resultados((await apiDjango.get('/api/pagos/', { params: { page_size: 100 } })).data),
-  porMes: async (meses = 6) => (await apiDjango.get('/api/pagos/por-mes/', { params: { meses } })).data,
+export const obtenerPagos = async () => {
+  const respuesta = await apiDjango.get('/api/pagos/', { params: { page_size: 100 } });
+  return resultados(respuesta.data);
+};
+
+export const obtenerPagosPorMes = async (meses = 6) => {
+  const respuesta = await apiDjango.get('/api/pagos/por-mes/', { params: { meses } });
+  return respuesta.data;
 };

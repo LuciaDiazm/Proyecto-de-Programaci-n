@@ -1,27 +1,29 @@
 import { apiNode } from './api';
 
-// Módulo 5: un servicio por entidad, los componentes nunca escriben URLs
-const proveedorService = {
-  obtenerTodos: async () => {
-    const respuesta = await apiNode.get('/api/proveedores');
-    return respuesta.data;
-  },
-  crear: async (datos) => {
-    const respuesta = await apiNode.post('/api/proveedores', datos);
-    return respuesta.data;
-  },
-  actualizar: async (id, datos) => {
-    const respuesta = await apiNode.put(`/api/proveedores/${id}`, datos);
-    return respuesta.data;
-  },
-  calificar: async (id, calificacion) => {
-    const respuesta = await apiNode.patch(`/api/proveedores/${id}/calificar`, { calificacion });
-    return respuesta.data;
-  },
-  eliminar: async (id) => {
-    const respuesta = await apiNode.delete(`/api/proveedores/${id}`);
-    return respuesta.data;
-  },
+// Módulo 5: un servicio por entidad, las páginas nunca escriben URLs
+const PROVEEDORES_URL = '/api/proveedores';
+
+export const obtenerProveedores = async () => {
+  const respuesta = await apiNode.get(PROVEEDORES_URL);
+  return respuesta.data;
 };
 
-export default proveedorService;
+export const crearProveedor = async (datosNuevo) => {
+  const respuesta = await apiNode.post(PROVEEDORES_URL, datosNuevo);
+  return respuesta.data;
+};
+
+export const actualizarProveedor = async (id, datosActualizados) => {
+  const respuesta = await apiNode.put(`${PROVEEDORES_URL}/${id}`, datosActualizados);
+  return respuesta.data;
+};
+
+export const calificarProveedor = async (id, calificacion) => {
+  const respuesta = await apiNode.patch(`${PROVEEDORES_URL}/${id}/calificar`, { calificacion });
+  return respuesta.data;
+};
+
+export const eliminarProveedor = async (id) => {
+  const respuesta = await apiNode.delete(`${PROVEEDORES_URL}/${id}`);
+  return respuesta.data;
+};

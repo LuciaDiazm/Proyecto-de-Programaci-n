@@ -1,5 +1,5 @@
 // Clase 10: WebSocket nativo con reconexión (backoff exponencial + jitter) y resincronización.
-export function conectarProyecto({ url, obtenerToken, alRecibir, alReconectar, alCambiarEstado }) {
+export function conectarProyecto({ url, alRecibir, alReconectar, alCambiarEstado }) {
   const ESPERA_INICIAL = 1000;
   const ESPERA_MAXIMA = 30000;
 
@@ -10,29 +10,23 @@ export function conectarProyecto({ url, obtenerToken, alRecibir, alReconectar, a
   let yaConecto = false;
 
   const programarReintento = () => {
-    alCambiarEstado?.('reconectando');
+    if (alCambiarEstado) alCambiarEstado('reconectando');
     // El jitter evita que todos los clientes reintenten en el mismo instante
     temporizador = setTimeout(abrir, espera + Math.random() * 500);
     espera = Math.min(espera * 2, ESPERA_MAXIMA);
   };
 
-  async function abrir() {
-    let token;
-    try {
-      token = await obtenerToken();
-    } catch {
-      programarReintento();
-      return;
-    }
+  function abrir() {
     if (cerradoAPropósito) return;
+    const token = localStorage.getItem('token');
 
     socket = new WebSocket(`${url}?token=${encodeURIComponent(token)}`);
 
     socket.onopen = () => {
       espera = ESPERA_INICIAL;
-      alCambiarEstado?.('conectado');
+      if (alCambiarEstado) alCambiarEstado('conectado');
       // Lo que pasó mientras estuvimos desconectados se recupera por REST
-      if (yaConecto) alReconectar?.();
+      if (yaConecto && alReconectar) alReconectar();
       yaConecto = true;
     };
 
@@ -49,7 +43,7 @@ export function conectarProyecto({ url, obtenerToken, alRecibir, alReconectar, a
     cerrar() {
       cerradoAPropósito = true;
       clearTimeout(temporizador);
-      socket?.close();
+      if (socket) socket.close();
     },
   };
 }

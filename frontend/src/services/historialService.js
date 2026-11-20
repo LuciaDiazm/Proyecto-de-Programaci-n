@@ -1,6 +1,11 @@
 import { apiNode } from './api';
 
-export const historialService = {
-  deSuscripcion: async (id) => (await apiNode.get(`/api/historial/${id}`)).data,
-  aumentos: async () => (await apiNode.get('/api/historial/aumentos')).data,
+export const obtenerHistorial = async (suscripcionId) => {
+  const respuesta = await apiNode.get(`/api/historial/${suscripcionId}`);
+  return respuesta.data;
+};
+
+export const obtenerAumentos = async () => {
+  const respuesta = await apiNode.get('/api/historial/aumentos');
+  return respuesta.data;
 };
