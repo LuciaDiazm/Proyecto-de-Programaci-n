@@ -308,6 +308,7 @@ Las demás variables de cada API se explican en su sección: [Django](#api-de-dj
 | Node muestra un error de conexión a MongoDB | MongoDB no está corriendo | Iniciarlo (servicio de Windows) o `docker compose up -d mongo`. |
 | `docker compose up` dice que no encuentra `.env.docker` | Ese archivo no viene en el repositorio | Crearlo como en el paso 1 de la [opción A](#opción-a-backend-con-docker). |
 | `port is already allocated` o `EADDRINUSE` | Otro programa usa el puerto 3000, 8000 o 5173 | Cerrar el otro programa, o la otra forma de levantar el proyecto (no correr la A y la B a la vez). |
+| Con Docker, `mongo` no arranca y dice `port is already allocated` en el 27017 | Hay un MongoDB instalado en la compu que ya usa ese puerto | Pausarlo antes de `docker compose up`: en Windows, abrir **Servicios**, buscar **MongoDB Server** y tocar **Detener**. Al terminar, se vuelve a iniciar desde el mismo lugar. Lo mismo pasa con PostgreSQL (5432) o Redis (6379) si están instalados. |
 | PowerShell no deja ejecutar `.venv\Scripts\activate` | La política de scripts de Windows lo bloquea | Usar la terminal CMD, o correr antes `Set-ExecutionPolicy -Scope Process Bypass` (vale solo para esa ventana). |
 | Error de CORS en la consola del navegador | El frontend no corre en `http://localhost:5173` | Usar esa dirección, o agregar la nueva en `CORS_ORIGINS` (Node) y `CORS_ALLOWED_ORIGINS` (Django). |
 | No aparece el dólar tarjeta | La API externa (dolarapi.com) no respondió | No afecta al resto. Los montos en dólares se muestran sin convertir. |
