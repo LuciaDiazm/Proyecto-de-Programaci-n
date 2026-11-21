@@ -1,0 +1,57 @@
+# Levanta todo el backend:           docker compose up --build
+# Solo las bases (para desarrollar): docker compose up -d db mongo redis
+services:
+  web:
+    build: ./backend-django
+    ports:
+      - "8000:8000"
+    env_file: ./backend-django/.env.docker
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  node:
+    build: ./backend-node
+    ports:
+      - "3000:3000"
+    env_file: ./backend-node/.env.docker
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: aldia
+      POSTGRES_USER: aldia
+      POSTGRES_PASSWORD: aldia123
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aldia -d aldia"]
+      interval: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      retries: 10
+    volumes:
+      - mongodata:/data/db
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:
+  mongodata:
