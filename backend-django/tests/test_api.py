@@ -195,7 +195,7 @@ def test_no_se_puede_usar_una_etiqueta_ajena(autenticar):
     respuesta = autenticar().post("/api/suscripciones/", {
         "nombre": "Slack", "monto": "10", "dia_cobro": 1, "etiquetas": [ajena.id],
     }, format="json")
-    assert respuesta.status_code == 400
+    assert respuesta.status_code == 403
 
 
 def test_solo_admin_modifica_categorias(autenticar):
