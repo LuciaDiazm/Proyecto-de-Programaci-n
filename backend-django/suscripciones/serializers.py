@@ -79,14 +79,6 @@ class SuscripcionSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         return getattr(request, "user", None)
 
-    def get_fields(self):
-        campos = super().get_fields()
-        usuario = self._usuario()
-        if usuario is not None and getattr(usuario, "is_authenticated", False):
-            # Solo se pueden asignar las etiquetas propias
-            campos["etiquetas"].child_relation.queryset = Etiqueta.objects.filter(usuario_id=usuario.id)
-        return campos
-
     def get_dias_para_cobro(self, obj):
         """Días que faltan para el cobro (negativo si está atrasado)."""
         return (obj.proxima_fecha_cobro - date.today()).days

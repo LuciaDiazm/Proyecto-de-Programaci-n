@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from django.contrib.auth.models import User
-from django.db.models import ProtectedError, Q
+from django.db.models import ProtectedError
 from django.http import JsonResponse
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.authentication import SessionAuthentication
@@ -168,14 +168,23 @@ class SuscripcionViewSet(viewsets.ModelViewSet):
             AuditoriaService.registrar("permission_denied", self.request, f"grupo={grupo.pk}")
             raise PermissionDenied("Solo un admin del grupo puede crear o mover suscripciones en él.")
 
+    def _verificar_etiquetas(self, etiquetas, dueno_id):
+        # Cada etiqueta tiene que ser del dueño de la suscripción (mismo patrón que el rol, Clase 7)
+        for etiqueta in etiquetas:
+            if etiqueta.usuario_id != dueno_id:
+                raise PermissionDenied("Solo se pueden usar etiquetas del dueño de la suscripción.")
+
     def perform_create(self, serializer):
         self._verificar_admin_del_grupo(serializer.validated_data.get("grupo"))
+        self._verificar_etiquetas(serializer.validated_data.get("etiquetas", []), self.request.user.id)
         SuscripcionService.crear(serializer, self.request.user)
 
     def perform_update(self, serializer):
         if "grupo" in serializer.validated_data:
             self._verificar_admin_del_grupo(serializer.validated_data["grupo"])
-        SuscripcionService.actualizar(serializer, self.get_object())
+        suscripcion = self.get_object()
+        self._verificar_etiquetas(serializer.validated_data.get("etiquetas", []), suscripcion.usuario_id)
+        SuscripcionService.actualizar(serializer, suscripcion)
 
     def destroy(self, request, *args, **kwargs):
         suscripcion = SuscripcionService.cancelar(self.get_object())
@@ -242,7 +251,9 @@ class GrupoViewSet(viewsets.ModelViewSet):
 
     def _resolver_usuario(self, identificador):
         """Busca primero una cuenta de Django y después una de Node (por email)."""
-        cuenta = User.objects.filter(Q(username=identificador) | Q(email__iexact=identificador)).first()
+        cuenta = User.objects.filter(username=identificador).first()
+        if cuenta is None:
+            cuenta = User.objects.filter(email__iexact=identificador).first()
         if cuenta is not None:
             return f"dj-{cuenta.pk}", cuenta.get_username()
         encontrado = buscar_usuario_por_email(identificador)
