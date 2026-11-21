@@ -12,6 +12,7 @@ import Categorias from './pages/Categorias';
 import Proveedores from './pages/Proveedores';
 import Grupos from './pages/Grupos';
 import DetalleGrupo from './pages/DetalleGrupo';
+import Etiquetas from './pages/Etiquetas';
 
 // Módulo 5: el mapa de navegación de la app
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="grupos/:id" element={<DetalleGrupo />} />
           <Route path="avisos" element={<Avisos />} />
           <Route path="asesor" element={<Asesor />} />
+          <Route path="etiquetas" element={<Etiquetas />} />
           <Route path="perfil" element={<Perfil />} />
           <Route element={<ProtectedRoute soloAdmin />}>
             <Route path="categorias" element={<Categorias />} />
