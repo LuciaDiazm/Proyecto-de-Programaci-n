@@ -339,7 +339,134 @@ Hecho con React 19 y Vite. Sigue la arquitectura por capas del Módulo 5:
 
 ## API de Django
 
-> **Sección a cargo de Marianela.** Tiene que incluir: instalación, variables del `.env`, migraciones, datos de ejemplo, cómo correr las pruebas y la cobertura, Docker, WebSocket (Channels) y GraphQL, y la tabla de endpoints.
+Hecha con Django REST Framework. Guarda las suscripciones, los pagos, las categorías, las etiquetas y los grupos. Para el frontend no tiene usuarios propios: valida el token (JWT) que firma Node.
+
+### Instalación
+
+Los pasos están en la opción B (paso 1) o, con Docker, en la opción A.
+
+### Cómo está organizada
+
+- `models.py`: las tablas (Categoria, Etiqueta, Grupo, MembresiaGrupo, Suscripcion, Pago y SecurityLog).
+- `serializers.py`: validan los datos que llegan.
+- `views.py`: reciben la petición, llaman al servicio y responden.
+- `services.py`: las reglas de negocio, como registrar un pago o avisar a Node.
+- `repositories.py`: las consultas a la base.
+- `permisos.py`: quién puede ver y quién puede modificar cada cosa.
+- `fechas.py`: el cálculo de la próxima fecha de cobro.
+
+### Variables del .env
+
+Se copian de `backend-django/.env.example`:
+
+- `SECRET_KEY`: clave propia de Django, larga y al azar.
+- `DEBUG`: `True` en desarrollo.
+- `DB_ENGINE`: `sqlite` por defecto. Con `postgresql` o `mysql` hay que completar también `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST` y `DB_PORT`.
+- `JWT_SECRET` y `JWT_ISSUER`: tienen que ser iguales a los de Node.
+- `API_KEY_INTERNA`: tiene que ser igual a la de Node.
+- `NODE_API_URL`: dirección de la API de Node (`http://localhost:3000`).
+- `CORS_ALLOWED_ORIGINS`: dirección del frontend (`http://localhost:5173`).
+- `REDIS_URL`: opcional. Sin ella, el tiempo real funciona igual en desarrollo.
+- `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`: opcionales, para entrar con Google.
+
+### Migraciones
+
+```bash
+python manage.py migrate
+```
+
+Crea las tablas y carga las categorías de ejemplo. Con Docker se hace solo.
+
+### Datos de ejemplo
+
+Ver la sección "Usuario administrador y datos de ejemplo".
+
+### Pruebas y cobertura
+
+Dentro de `backend-django`, con el entorno activado:
+
+```bash
+pytest --cov=suscripciones
+```
+
+Son 61 pruebas con 90 % de cobertura. Para ver el detalle en el navegador:
+
+```bash
+pytest --cov=suscripciones --cov-report=html
+```
+
+y abrir `htmlcov/index.html`. Las pruebas no necesitan internet, Redis ni PostgreSQL.
+
+### Docker
+
+En `docker-compose.yml` el servicio de Django se llama `web`. Usa PostgreSQL y Redis, lee el archivo `backend-django/.env.docker` y al arrancar aplica las migraciones solo. Para correr un comando adentro:
+
+```bash
+docker compose exec web python manage.py <comando>
+```
+
+### WebSocket (Channels)
+
+Cada grupo tiene su canal en tiempo real:
+
+```
+ws://localhost:8000/ws/grupos/<id>/?token=<JWT>
+```
+
+El token va en la dirección porque el navegador no puede mandar headers al abrir un WebSocket. Solo entran los miembros del grupo. Los eventos que llegan son: `presencia`, `suscripcion_creada`, `suscripcion_actualizada`, `pago_registrado` y `miembro_agregado`.
+
+### GraphQL
+
+En `http://localhost:8000/graphql/` se abre GraphiQL para probar consultas. Pide el mismo token que el resto de la API. Ejemplo:
+
+```graphql
+{
+  allCategorias { id nombre color }
+  misSuscripciones { nombre monto estado }
+}
+```
+
+- Consultas: `allCategorias`, `allGrupos`, `misSuscripciones`, `suscripcion(id)` y `suscripcionesPorEstado(estado)`.
+- Mutations: `createSuscripcion` y `updateSuscripcionEstado`.
+
+### Endpoints
+
+Todos empiezan con `http://localhost:8000` y, salvo que se diga otra cosa, piden el token.
+
+Suscripciones:
+
+- `GET` y `POST /api/suscripciones/`: listar y crear.
+- `GET`, `PATCH` y `DELETE /api/suscripciones/{id}/`: ver, editar y cancelar.
+- `GET /api/suscripciones/proximos/?dias=30`: cobros que se acercan.
+- `GET /api/suscripciones/resumen/`: totales por mes y por año.
+- `POST /api/suscripciones/{id}/registrar-pago/`: registra un pago.
+- `GET /api/suscripciones/{id}/pagos/`: pagos de una suscripción.
+
+Pagos:
+
+- `GET /api/pagos/`: todos los pagos.
+- `GET /api/pagos/por-mes/?meses=6`: total pagado por mes.
+
+Categorías y etiquetas:
+
+- `GET`, `POST`, `PATCH` y `DELETE /api/categorias/`: cualquiera las ve, solo un ADMIN las modifica.
+- `GET`, `POST`, `PATCH` y `DELETE /api/etiquetas/`: etiquetas propias de cada usuario.
+
+Grupos:
+
+- `GET`, `POST`, `PATCH` y `DELETE /api/grupos/`: grupos del usuario.
+- `POST /api/grupos/{id}/add-member/`: agrega un miembro (solo el admin del grupo).
+- `GET /api/grupos/{id}/summary/`: resumen del grupo.
+
+Otros:
+
+- `GET /api/feriados/`: feriados del año.
+- `GET /api/health/`: estado de la API (no pide token).
+- `GET /api/internos/proximos-cobros/`: lo usa Node, con la API key.
+- `POST /api/register/` y `/api/token/`: cuentas propias de Django (Clase 6). El frontend no las usa.
+- `/accounts/google/login/`: entrar con Google (Clase 7).
+- `/graphql/`: GraphQL.
+- `/admin/`: panel de administración de Django.
 
 ## API de Node
 
