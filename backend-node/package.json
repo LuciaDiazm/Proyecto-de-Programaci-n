@@ -1,0 +1,48 @@
+{
+  "name": "aldia-backend-node",
+  "version": "1.0.0",
+  "description": "Al Día - API de usuarios, proveedores, historial de precios, notificaciones, cotización e IA",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:cov": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --coverage",
+    "crear-admin": "node src/scripts/crearAdmin.js"
+  },
+  "license": "ISC",
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/scripts/**",
+      "!src/server.js"
+    ]
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "express-validator": "^7.3.2",
+    "firebase-admin": "^13.0.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.9.4",
+    "morgan": "^1.11.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "jest": "^30.0.0",
+    "nodemon": "^3.1.14",
+    "socket.io-client": "^4.8.1",
+    "supertest": "^7.1.0"
+  }
+}
