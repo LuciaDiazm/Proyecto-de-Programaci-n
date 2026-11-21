@@ -61,6 +61,7 @@ export default function Layout() {
     { a: '/suscripciones', texto: 'Suscripciones', Icono: IconoLista },
     { a: '/proveedores', texto: 'Proveedores', Icono: IconoEdificio },
     { a: '/grupos', texto: 'Grupos', Icono: IconoGrupo },
+    { a: '/etiquetas', texto: 'Etiquetas', Icono: IconoEtiqueta },
     { a: '/avisos', texto: 'Avisos', Icono: IconoCampana, contador: noLeidas },
     { a: '/asesor', texto: 'Asesor IA', Icono: IconoChispa },
     { a: '/perfil', texto: 'Perfil', Icono: IconoUsuario },

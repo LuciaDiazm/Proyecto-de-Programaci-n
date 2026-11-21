@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { obtenerCategorias } from '../services/categoriaService';
+import { obtenerEtiquetas } from '../services/etiquetaService';
 import { obtenerGrupos } from '../services/grupoService';
 import { actualizarSuscripcion, crearSuscripcion } from '../services/suscripcionService';
 import { mensajeError } from '../services/api';
@@ -15,6 +16,7 @@ const VACIO = {
   fecha_inicio: hoyISO(),
   categoria: '',
   grupo: '',
+  etiquetas: [],
   descripcion: '',
 };
 
@@ -28,6 +30,7 @@ const desdeSuscripcion = (suscripcion) => ({
   fecha_inicio: suscripcion.fecha_inicio,
   categoria: suscripcion.categoria ? String(suscripcion.categoria) : '',
   grupo: suscripcion.grupo ? String(suscripcion.grupo) : '',
+  etiquetas: suscripcion.etiquetas,
   descripcion: suscripcion.descripcion,
 });
 
@@ -36,11 +39,13 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
   const [form, setForm] = useState(editando ? desdeSuscripcion(suscripcion) : VACIO);
   const [categorias, setCategorias] = useState([]);
   const [grupos, setGrupos] = useState([]);
+  const [etiquetas, setEtiquetas] = useState([]);
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
     obtenerCategorias().then(setCategorias).catch(() => {});
+    obtenerEtiquetas().then(setEtiquetas).catch(() => {});
     // Solo un admin del grupo puede compartir suscripciones en él
     obtenerGrupos()
       .then((lista) => setGrupos(lista.filter((g) => g.mi_rol === 'admin')))
@@ -48,6 +53,14 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
   }, []);
 
   const cambiar = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  // Se envían como lista de ids, por ejemplo [1, 3]
+  const alternarEtiqueta = (id) => {
+    const elegidas = form.etiquetas.includes(id)
+      ? form.etiquetas.filter((otra) => otra !== id)
+      : [...form.etiquetas, id];
+    setForm({ ...form, etiquetas: elegidas });
+  };
 
   const enviar = async (e) => {
     e.preventDefault();
@@ -129,6 +142,22 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
               ))}
             </select>
           </label>
+        )}
+
+        {etiquetas.length > 0 && (
+          <fieldset className="opciones campo--doble">
+            <legend>Etiquetas</legend>
+            {etiquetas.map((et) => (
+              <label key={et.id}>
+                <input
+                  type="checkbox"
+                  checked={form.etiquetas.includes(et.id)}
+                  onChange={() => alternarEtiqueta(et.id)}
+                />
+                {et.nombre}
+              </label>
+            ))}
+          </fieldset>
         )}
 
         <label className="campo campo--doble">
