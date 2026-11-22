@@ -470,7 +470,164 @@ Otros:
 
 ## API de Node
 
-> **Sección a cargo de Melina.** Tiene que incluir: instalación, variables del `.env`, cómo crear el admin, cómo probar el login, el JWT y las rutas protegidas con la colección de Postman (`postman/`), las pruebas y Socket.IO, y la tabla de endpoints.
+Hecha con Express 5, Mongoose 8 y MongoDB. Maneja las cuentas de usuario, los proveedores, los planes y paquetes, el historial de precios, los avisos, la cotización del dólar y el asesor con IA. Es la que **firma el token (JWT)** cuando alguien inicia sesión; Django después valida ese mismo token.
+
+### Instalación
+
+Los pasos están en la opción B (paso 2) o, con Docker, en la opción A. En resumen:
+
+```bash
+cd backend-node
+npm install
+copy .env.example .env
+npm run dev
+```
+
+Está lista cuando aparecen `Base de datos conectada: aldia` y `Servidor HTTP y WebSockets listo en http://localhost:3000`. Para comprobarlo, `http://localhost:3000/api/health` responde `{"status": "ok", ...}`.
+
+### Cómo está organizada
+
+- `src/server.js`: conecta MongoDB y levanta HTTP y Socket.IO en el mismo puerto.
+- `src/app.js`: la configuración de Express (seguridad, CORS, límites y rutas). Está separada del servidor para que las pruebas la usen sin levantarlo.
+- `src/models/`: los esquemas de Mongoose (Usuario, Proveedor, Plan, Paquete, HistorialPrecio, Notificacion y AnalisisIA).
+- `src/routes/`: las rutas y sus validaciones con express-validator.
+- `src/controllers/`: reciben la petición y responden.
+- `src/middlewares/`: token, rol ADMIN, API key interna, límites de peticiones y formato de errores.
+- `src/services/`: el token, la cotización del dólar, la comunicación con Django y la revisión de cobros.
+- `src/sockets/`: Socket.IO y el puente opcional con Firebase.
+- `src/utils/`: la clase `Monto` y los errores propios.
+- `src/scripts/crearAdmin.js`: crea un usuario ADMIN.
+
+### Variables del .env
+
+Se copian de `backend-node/.env.example`:
+
+- `PORT`: puerto de la API (`3000`).
+- `MONGO_URI`: dirección de MongoDB (`mongodb://localhost:27017/aldia`).
+- `JWT_SECRET` y `JWT_ISSUER`: tienen que ser iguales a los de Django.
+- `JWT_EXPIRATION`: cuánto dura el token (`8h`). Cuando vence hay que volver a iniciar sesión: no hay refresh token.
+- `API_KEY_INTERNA`: tiene que ser igual a la de Django.
+- `DJANGO_API_URL`: dirección de la API de Django (`http://localhost:8000`).
+- `CORS_ORIGINS`: dirección del frontend (`http://localhost:5173`). Vale para la API y para Socket.IO.
+- `MINUTOS_REVISION_COBROS`: cada cuántos minutos se revisan los cobros para generar avisos (`60`).
+- `GEMINI_API_KEY` y `GEMINI_MODEL`: opcionales, para el asesor con IA.
+- `FIREBASE_KEY_PATH` y `FIREBASE_DATABASE_URL`: opcionales, para el puente con Firebase.
+
+### Crear el administrador
+
+```bash
+npm run crear-admin -- admin@aldia.com Admin1234 "Administrador"
+```
+
+La contraseña necesita al menos 8 caracteres, con letras y números. Si el email ya existe, lo convierte en ADMIN. Más detalles en [Usuario administrador y datos de ejemplo](#usuario-administrador-y-datos-de-ejemplo).
+
+### Probar con Postman
+
+1. En Postman: **Import** → elegir `postman/AlDia.postman_collection.json`.
+2. En la pestaña **Variables** de la colección, completar `apiKeyInterna` con la `API_KEY_INTERNA` del `.env`. Las direcciones (`node` y `django`) ya vienen cargadas.
+3. Abrir **1. Autenticación (Node)** y ejecutar **Registro** o **Login**. La respuesta trae el `token` y la colección lo guarda sola en la variable `token`.
+4. Las demás peticiones mandan ese token en el header `Authorization: Bearer {{token}}`, así que ya se pueden usar.
+
+Para ver cómo se protegen las rutas:
+
+| Prueba | Resultado esperado |
+|---|---|
+| Quitar el header `Authorization` en **Perfil** | `401` · "Acceso denegado. Token no valido" |
+| Usar un token vencido (pasadas las 8 h) | `401` · "El token ha expirado. Inicie sesion nuevamente" |
+| **Eliminar proveedor** con un usuario común | `403` · "Acceso denegado, se requiere privilegios de administrador" |
+| **Registrar precio** (rutas internas) sin `X-API-KEY` | `403` · "Clave interna invalida" |
+| Login con contraseña incorrecta | `401` · "Credenciales invalidas" (no dice si el email existe) |
+
+El login permite 5 intentos fallidos por hora y el registro 10 por hora.
+
+### Pruebas y cobertura
+
+Dentro de `backend-node`:
+
+```bash
+npm test
+```
+
+Son 29 pruebas en 5 archivos:
+
+- `auth.test.js`: login, credenciales incorrectas, validaciones, token vencido y la ruta interna con API key.
+- `proveedores.test.js`: alta, listado, edición, calificación y borrado lógico, más los casos de error (401, 400, 403, 404 y 500).
+- `planes.test.js`: los cuatro tipos de `populate` (básico, con selección, múltiple y anidado).
+- `sockets.test.js`: Socket.IO rechaza conexiones sin token y cada aviso le llega solo a su usuario.
+- `dominio.test.js`: la clase `Monto` y los errores propios.
+
+Las pruebas no necesitan MongoDB ni internet: los modelos se reemplazan por mocks con `jest.unstable_mockModule`. Para ver la cobertura:
+
+```bash
+npm run test:cov
+```
+
+### Docker
+
+En `docker-compose.yml` el servicio se llama `node`. Usa MongoDB y lee el archivo `backend-node/.env.docker`. Para correr un comando adentro:
+
+```bash
+docker compose exec node npm run crear-admin -- admin@aldia.com Admin1234 "Administrador"
+```
+
+### Socket.IO
+
+Comparte el puerto 3000 con la API. Para conectarse hay que mandar el token:
+
+```js
+import { io } from 'socket.io-client';
+const socket = io('http://localhost:3000', { auth: { token } });
+```
+
+Sin un token válido la conexión se rechaza. Cada usuario entra a su propia sala (`usuario:<id>`), así los avisos le llegan solo a él. Eventos:
+
+- `notificacion:nueva`: un cobro se acerca o subió el precio de una suscripción.
+- `actualizacion_ofertas`: cambios de Firebase, solo si el puente está activado.
+
+### Endpoints
+
+Todos empiezan con `http://localhost:3000` y, salvo que se diga otra cosa, piden el token.
+
+Autenticación:
+
+- `POST /api/auth/registro`: crear cuenta (no pide token).
+- `POST /api/auth/login`: iniciar sesión, devuelve el token (no pide token).
+- `GET` y `PATCH /api/auth/perfil`: ver y editar nombre y días de aviso.
+
+Proveedores:
+
+- `GET` y `POST /api/proveedores`: listar los activos y crear.
+- `GET` y `PUT /api/proveedores/{id}`: ver y editar.
+- `PATCH /api/proveedores/{id}/calificar`: calificación de 1 a 5.
+- `DELETE /api/proveedores/{id}`: borrado lógico (solo ADMIN).
+
+Planes y paquetes:
+
+- `GET` y `POST /api/planes`: listar con el proveedor (populate básico) y crear.
+- `GET /api/planes/resumen`: populate con selección de campos.
+- `GET /api/planes/detalle`: populate múltiple.
+- `GET` y `PUT /api/planes/{id}`: ver y editar. `DELETE` solo ADMIN.
+- `GET` y `POST /api/paquetes`: listar con populate anidado y crear. `DELETE /api/paquetes/{id}`: borrar.
+
+Historial, avisos, cotización e IA:
+
+- `GET /api/historial/aumentos`: últimos aumentos de precio.
+- `GET /api/historial/{suscripcionId}`: historial de una suscripción.
+- `GET /api/notificaciones`: avisos del usuario.
+- `GET /api/notificaciones/contador`: cuántos no leyó.
+- `PATCH /api/notificaciones/{id}/leida` y `/api/notificaciones/leer-todas`: marcar como leídos.
+- `POST /api/notificaciones/revisar`: fuerza la revisión de cobros (solo ADMIN).
+- `GET /api/cotizacion`: cotización del dólar.
+- `POST /api/ia/analizar` y `GET /api/ia/ultimo`: asesor con IA (10 análisis por hora).
+
+Internas (las usa Django, con el header `X-API-KEY` en lugar del token):
+
+- `POST /api/historial/interno`: registra un cambio de precio.
+- `GET /api/usuarios/interno/buscar?email=...`: busca un usuario por email.
+
+Otros:
+
+- `GET /api/health`: estado de la API (no pide token).
 
 ## Pruebas automáticas
 
