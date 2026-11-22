@@ -62,14 +62,14 @@ export default function DetalleGrupo() {
         if (mensaje.event === 'presencia') {
           setEnLinea((actual) =>
             mensaje.status === 'online'
-              ? [...new Set([...actual, mensaje.user])]
+              ? (actual.includes(mensaje.user) ? actual : [...actual, mensaje.user])
               : actual.filter((nombre) => nombre !== mensaje.user)
           );
           return;
         }
         if (TEXTOS_EVENTO[mensaje.event]) {
           setActividad((actual) =>
-            [{ id: crypto.randomUUID(), texto: TEXTOS_EVENTO[mensaje.event] }, ...actual].slice(0, 8)
+            [{ id: `${Date.now()}-${actual.length}`, texto: TEXTOS_EVENTO[mensaje.event] }, ...actual].slice(0, 8)
           );
           cargarDatos();
         }
