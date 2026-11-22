@@ -1,0 +1,1627 @@
+{
+  "info": {
+    "name": "Al Día - Proyecto Final Prog IV",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Primero ejecutá Registro o Login: el token se guarda solo en la variable {{token}}."
+  },
+  "variable": [
+    {
+      "key": "node",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "django",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "suscripcionId",
+      "value": "1"
+    },
+    {
+      "key": "apiKeyInterna",
+      "value": "pegar-la-API_KEY_INTERNA"
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "proveedorId",
+      "value": ""
+    },
+    {
+      "key": "planId",
+      "value": ""
+    },
+    {
+      "key": "grupoId",
+      "value": ""
+    },
+    {
+      "key": "refreshDjango",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Autenticación (Node)",
+      "item": [
+        {
+          "name": "Registro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/auth/registro",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "registro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Marianela\",\n  \"email\": \"mari@test.com\",\n  \"password\": \"Clave1234\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos.token) { pm.collectionVariables.set('token', datos.token); }",
+                  "if (datos.refreshToken) { pm.collectionVariables.set('refreshToken', datos.refreshToken); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/auth/login",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"mari@test.com\",\n  \"password\": \"Clave1234\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos.token) { pm.collectionVariables.set('token', datos.token); }",
+                  "if (datos.refreshToken) { pm.collectionVariables.set('refreshToken', datos.refreshToken); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/auth/perfil",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "perfil"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar perfil",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/auth/perfil",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "perfil"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diasAviso\": 5\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh (rotación)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/auth/refresh",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos.token !== undefined) { pm.collectionVariables.set('token', datos.token); }",
+                  "if (datos.refreshToken !== undefined) { pm.collectionVariables.set('refreshToken', datos.refreshToken); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/auth/logout",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Suscripciones (Django)",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/suscripciones/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "suscripciones"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/suscripciones/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "suscripciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Netflix\",\n  \"monto\": \"10999\",\n  \"moneda\": \"ARS\",\n  \"frecuencia\": \"mensual\",\n  \"dia_cobro\": 12,\n  \"categoria\": 1\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos.id) { pm.collectionVariables.set('suscripcionId', datos.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ver una",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/suscripciones/{{suscripcionId}}/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "suscripciones",
+                "{{suscripcionId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cambiar precio",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/suscripciones/{{suscripcionId}}/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "suscripciones",
+                "{{suscripcionId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"monto\": \"12999\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Registrar pago",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/suscripciones/{{suscripcionId}}/registrar-pago/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "suscripciones",
+                "{{suscripcionId}}",
+                "registrar-pago"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Pagos de una suscripción",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/suscripciones/{{suscripcionId}}/pagos/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "suscripciones",
+                "{{suscripcionId}}",
+                "pagos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Próximos cobros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/suscripciones/proximos/?dias=30",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "suscripciones",
+                "proximos"
+              ],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Resumen",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/suscripciones/resumen/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "suscripciones",
+                "resumen"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancelar (borrado lógico)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/suscripciones/{{suscripcionId}}/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "suscripciones",
+                "{{suscripcionId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pagos por mes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/pagos/por-mes/?meses=6",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "pagos",
+                "por-mes"
+              ],
+              "query": [
+                {
+                  "key": "meses",
+                  "value": "6"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Categorías",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/categorias/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "categorias"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear categoría (solo ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/categorias/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "categorias"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Videojuegos\",\n  \"color\": \"#7C3AED\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Historial, avisos, cotización e IA (Node)",
+      "item": [
+        {
+          "name": "Historial de una suscripción",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/historial/{{suscripcionId}}",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "historial",
+                "{{suscripcionId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Últimos aumentos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/historial/aumentos",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "historial",
+                "aumentos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Avisos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/notificaciones",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "notificaciones"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Contador sin leer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/notificaciones/contador",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "notificaciones",
+                "contador"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Marcar todo leído",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/notificaciones/leer-todas",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "notificaciones",
+                "leer-todas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Revisar cobros (solo ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/notificaciones/revisar",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "notificaciones",
+                "revisar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cotización del dólar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/cotizacion",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "cotizacion"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Analizar con IA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/ia/analizar",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "ia",
+                "analizar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Último análisis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/ia/ultimo",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "ia",
+                "ultimo"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Rutas internas (servidor a servidor)",
+      "item": [
+        {
+          "name": "Próximos cobros de todos (Django)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-KEY",
+                "value": "{{apiKeyInterna}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/internos/proximos-cobros/?dias=7",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "internos",
+                "proximos-cobros"
+              ],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "7"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Registrar precio (Node)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-KEY",
+                "value": "{{apiKeyInterna}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/historial/interno",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "historial",
+                "interno"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"pegar-id-de-usuario\",\n  \"suscripcionId\": 1,\n  \"nombreSuscripcion\": \"Netflix\",\n  \"precioAnterior\": 10999,\n  \"monedaAnterior\": \"ARS\",\n  \"precioNuevo\": 12999,\n  \"moneda\": \"ARS\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Proveedores (Node)",
+      "item": [
+        {
+          "name": "Crear",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/proveedores",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "proveedores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razonSocial\": \"Netflix Argentina\",\n  \"cuit\": \"30123456789\",\n  \"contacto\": {\n    \"email\": \"contacto@netflix.com\",\n    \"telefono\": \"1140000000\"\n  },\n  \"categorias\": [\n    \"STREAMING\"\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos._id !== undefined) { pm.collectionVariables.set('proveedorId', datos._id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/proveedores",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "proveedores"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/proveedores/{{proveedorId}}",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "proveedores",
+                "{{proveedorId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/proveedores/{{proveedorId}}",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "proveedores",
+                "{{proveedorId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razonSocial\": \"Netflix Argentina\",\n  \"cuit\": \"30123456789\",\n  \"contacto\": {\n    \"email\": \"contacto@netflix.com\",\n    \"telefono\": \"1140000000\"\n  },\n  \"categorias\": [\n    \"STREAMING\"\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Calificar",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/proveedores/{{proveedorId}}/calificar",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "proveedores",
+                "{{proveedorId}}",
+                "calificar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calificacion\": 4\n}"
+            }
+          }
+        },
+        {
+          "name": "Eliminar (ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/proveedores/{{proveedorId}}",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "proveedores",
+                "{{proveedorId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Planes y paquetes: populate (Node)",
+      "item": [
+        {
+          "name": "Crear plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/planes",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "planes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Premium\",\n  \"precio\": 12000,\n  \"moneda\": \"ARS\",\n  \"proveedor\": \"{{proveedorId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos._id !== undefined) { pm.collectionVariables.set('planId', datos._id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A. Populate básico",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/planes",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "planes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "B. Populate con selección",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/planes/resumen",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "planes",
+                "resumen"
+              ]
+            }
+          }
+        },
+        {
+          "name": "C. Populate múltiple",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/planes/detalle",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "planes",
+                "detalle"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear paquete",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/paquetes",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "paquetes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Entretenimiento\",\n  \"planes\": [\n    \"{{planId}}\"\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "D. Populate anidado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{node}}/api/paquetes",
+              "host": [
+                "{{node}}"
+              ],
+              "path": [
+                "api",
+                "paquetes"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Grupos y roles (Django)",
+      "item": [
+        {
+          "name": "Crear grupo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/grupos/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "grupos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Casa\",\n  \"descripcion\": \"Gastos compartidos\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos.id !== undefined) { pm.collectionVariables.set('grupoId', datos.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar grupos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/grupos/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "grupos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Agregar miembro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/grupos/{{grupoId}}/add-member/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "{{grupoId}}",
+                "add-member"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"otra.persona@test.com\",\n  \"rol\": \"miembro\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Resumen",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/grupos/{{grupoId}}/summary/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "{{grupoId}}",
+                "summary"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Suscripciones del grupo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/suscripciones/?grupo={{grupoId}}",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "suscripciones"
+              ],
+              "query": [
+                {
+                  "key": "grupo",
+                  "value": "{{grupoId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Búsqueda, orden y paginación",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/suscripciones/?search=net&ordering=-monto&page=1&page_size=5",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "suscripciones"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "net"
+                },
+                {
+                  "key": "ordering",
+                  "value": "-monto"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Feriados",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/feriados/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "feriados"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Cuentas de Django (simplejwt)",
+      "item": [
+        {
+          "name": "Registro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/register/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"ana\",\n  \"email\": \"ana@test.com\",\n  \"password\": \"Clave12345!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/token/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"ana\",\n  \"password\": \"Clave12345!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos.access !== undefined) { pm.collectionVariables.set('token', datos.access); }",
+                  "if (datos.refresh !== undefined) { pm.collectionVariables.set('refreshDjango', datos.refresh); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/token/refresh/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "token",
+                "refresh"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refreshDjango}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos.access !== undefined) { pm.collectionVariables.set('token', datos.access); }",
+                  "if (datos.refresh !== undefined) { pm.collectionVariables.set('refreshDjango', datos.refresh); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Blacklist (logout)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/api/token/blacklist/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "api",
+                "token",
+                "blacklist"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refreshDjango}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. GraphQL (Django)",
+      "item": [
+        {
+          "name": "Query: mis suscripciones",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/graphql/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ misSuscripciones { id nombre monto estado } }\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Mutation: cambiar estado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{django}}/graphql/",
+              "host": [
+                "{{django}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation { updateSuscripcionEstado(id: {{suscripcionId}}, estado: \\\"pausada\\\") { suscripcion { id estado } } }\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
