@@ -21,3 +21,21 @@ jobs:
         run: npm ci
       - name: Compilar
         run: npm run build
+
+  django:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-django
+    env:
+      SECRET_KEY: clave-solo-para-los-tests-de-ci-0123456789
+      DEBUG: "False"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Ejecutar tests
+        run: pytest --cov=suscripciones
