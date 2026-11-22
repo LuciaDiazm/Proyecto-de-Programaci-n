@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { login, registro } from '../services/authService';
+import { login, obtenerUsuario, registro } from '../services/authService';
 import { mensajeError } from '../services/api';
 
 export default function Acceso({ modo }) {
@@ -30,8 +30,9 @@ export default function Acceso({ modo }) {
     }
   };
 
-  // Si ya hay sesión iniciada, no tiene sentido mostrar el login
-  if (localStorage.getItem('token')) return <Navigate to="/" replace />;
+  // Si ya hay sesión iniciada, no tiene sentido mostrar el login.
+  // Se pide lo mismo que en ProtectedRoute (token y usuario); si no, se mandarían uno al otro sin fin
+  if (localStorage.getItem('token') && obtenerUsuario()) return <Navigate to="/" replace />;
 
   return (
     <div className="acceso">

@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { aFecha, colorDeCategoria, formatearMonto, iniciales } from '../utils/formato';
 import Sello from './Sello';
@@ -56,15 +55,6 @@ export default function TiraDelMes({ suscripciones, pagos }) {
   const porDia = armarDias(suscripciones, pagos, anio, mes, diasDelMes);
   const pendientes = porDia.flat().filter((c) => !c.pagado).length;
 
-  // En pantallas angostas la tira se desplaza sola hasta el día de hoy
-  useEffect(() => {
-    const caja = document.getElementById('tira-dias');
-    const celdaHoy = document.querySelector('.tira__dia--hoy');
-    if (caja && celdaHoy && caja.scrollWidth > caja.clientWidth) {
-      caja.scrollLeft = celdaHoy.offsetLeft - caja.offsetLeft - 8;
-    }
-  }, []);
-
   return (
     <section className="tira" aria-label={`Cobros de ${nombreMes}`}>
       <div className="tira__cabecera">
@@ -77,7 +67,7 @@ export default function TiraDelMes({ suscripciones, pagos }) {
         </p>
       </div>
 
-      <div className="tira__dias" role="list" id="tira-dias">
+      <div className="tira__dias" role="list">
         {porDia.map((cobros, indice) => {
           const dia = indice + 1;
           const clases = ['tira__dia'];
