@@ -26,10 +26,6 @@
       "value": "pegar-la-API_KEY_INTERNA"
     },
     {
-      "key": "refreshToken",
-      "value": ""
-    },
-    {
       "key": "proveedorId",
       "value": ""
     },
@@ -83,8 +79,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "const datos = pm.response.json();",
-                  "if (datos.token) { pm.collectionVariables.set('token', datos.token); }",
-                  "if (datos.refreshToken) { pm.collectionVariables.set('refreshToken', datos.refreshToken); }"
+                  "if (datos.token) { pm.collectionVariables.set('token', datos.token); }"
                 ]
               }
             }
@@ -123,8 +118,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "const datos = pm.response.json();",
-                  "if (datos.token) { pm.collectionVariables.set('token', datos.token); }",
-                  "if (datos.refreshToken) { pm.collectionVariables.set('refreshToken', datos.refreshToken); }"
+                  "if (datos.token) { pm.collectionVariables.set('token', datos.token); }"
                 ]
               }
             }
@@ -181,73 +175,6 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"diasAviso\": 5\n}"
-            }
-          }
-        },
-        {
-          "name": "Refresh (rotación)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{node}}/api/auth/refresh",
-              "host": [
-                "{{node}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "refresh"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const datos = pm.response.json();",
-                  "if (datos.token !== undefined) { pm.collectionVariables.set('token', datos.token); }",
-                  "if (datos.refreshToken !== undefined) { pm.collectionVariables.set('refreshToken', datos.refreshToken); }"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{node}}/api/auth/logout",
-              "host": [
-                "{{node}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "logout"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
             }
           }
         }
