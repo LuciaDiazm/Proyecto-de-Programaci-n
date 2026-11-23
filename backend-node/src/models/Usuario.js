@@ -35,13 +35,13 @@ const usuarioSchema = new mongoose.Schema({
     timestamps: true
 });
 
-usuarioSchema.pre('save', async function () {
-
-    if (!this.isModified('password')) return;
+usuarioSchema.pre('save', async function (next) {
+    // Si la contraseña no cambió, no se vuelve a encriptar
+    if (!this.isModified('password')) return next();
 
     const salt = await bcrypt.genSalt(10);
-
     this.password = await bcrypt.hash(this.password, salt);
+    next();
 });
 
 usuarioSchema.methods.compararPassword = async function (passwordIngresado) {
