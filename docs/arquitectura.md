@@ -8,6 +8,18 @@ Las suscripciones y los pagos son datos con relaciones fijas y dinero, por eso v
 
 Node emite el JWT y Django lo valida con la misma clave, sin consultar a Node en cada petición. Para que las cuentas propias de Django (incluidas las de Google) no choquen con las de Node, su id se guarda como `dj-<pk>`. Las dos APIs se hablan entre servidores con una cabecera `X-API-KEY`: Django avisa a Node cada cambio de precio y Node le pide a Django los cobros próximos para generar los avisos.
 
+## La API de Django
+
+Elegimos Django REST Framework y PostgreSQL para las suscripciones porque son datos con relaciones fijas (suscripción, pago, grupo, membresía) y montos que no pueden redondearse mal: claves foráneas, `DecimalField` y `transaction.atomic`, que guarda el pago y la nueva fecha de cobro juntos o ninguno de los dos (Clase 7).
+
+La API sigue las capas de la Clase 5: las vistas reciben la petición y responden, los servicios tienen las reglas (registrar un pago, avisar a Node, mandar eventos al WebSocket) y los repositorios concentran las consultas. Así la misma regla sirve para REST, GraphQL y el panel de administración.
+
+Cada grupo tiene dos roles, admin y miembro, como los proyectos de la Clase 7. `has_object_permission` decide quién ve y quién modifica una suscripción existente, y `perform_create` y `perform_update` verifican al crear o editar, con `PermissionDenied`. Con ese mismo patrón se controla que las etiquetas sean del dueño de la suscripción.
+
+Channels (Clases 9 y 10) abre un canal por grupo (`grupo_<id>`). El consumer valida el token y solo deja entrar a los miembros; avisa quién está conectado y cada cambio. En producción usa Redis como capa de canales, y en desarrollo y en los tests, una en memoria.
+
+GraphQL (Clase 11) se sirve en `/graphql/` con el mismo token que REST. Sus consultas usan los mismos repositorios y servicios, así que los permisos son los mismos que en REST.
+
 ## Capas
 
 En Django, las vistas solo traducen HTTP, los servicios tienen las reglas de negocio y los repositorios concentran las consultas. Así las reglas se prueban sin pasar por HTTP. En Node, `src/app.js` no levanta el servidor, para que Supertest pueda probar las rutas directamente y Socket.IO se monte aparte en `src/server.js`.
