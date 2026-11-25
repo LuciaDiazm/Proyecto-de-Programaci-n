@@ -221,6 +221,12 @@ class SuscripcionService:
             colores[nombre] = suscripcion.categoria.color if suscripcion.categoria else "#94A3B8"
             por_categoria[nombre][suscripcion.moneda] += suscripcion.costo_mensual
 
+        # Pagos hechos después del vencimiento que cubrían
+        fuera_de_termino = 0
+        for pago in Pago.objects.filter(suscripcion__in=queryset):
+            if pago.fecha_pago > pago.fecha_cobro:
+                fuera_de_termino += 1
+                
         return {
             "cantidad_activas": len(activas),
             "cantidad_pausadas": queryset.filter(estado="pausada").count(),
@@ -231,6 +237,7 @@ class SuscripcionService:
                 for nombre, totales in sorted(por_categoria.items())
             ],
             "proximo_cobro": min(activas, key=lambda s: s.proxima_fecha_cobro, default=None),
+            "pagos_fuera_de_termino": fuera_de_termino,
         }
 
     @staticmethod
