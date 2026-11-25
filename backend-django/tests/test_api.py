@@ -6,7 +6,7 @@ import pytest
 from django.contrib.auth.models import User
 from django.core.management import call_command
 
-from suscripciones.models import Categoria, Etiqueta, SecurityLog, Suscripcion
+from suscripciones.models import Categoria, Pago, Etiqueta, SecurityLog, Suscripcion
 
 from .conftest import USUARIO_A, USUARIO_B, USUARIO_C, generar_token
 
@@ -165,6 +165,13 @@ def test_resumen_separa_monedas_y_calcula_costo_mensual(autenticar):
     assert datos["mensual"]["USD"] == Decimal("4.99")
     assert datos["cantidad_activas"] == 2
 
+
+def test_resumen_cuenta_pagos_fuera_de_termino(autenticar):
+    suscripcion = crear()
+    Pago.objects.create(suscripcion=suscripcion, fecha_pago=date(2026, 3, 12), fecha_cobro=date(2026, 3, 10), monto=Decimal("8999"), moneda="ARS")
+    Pago.objects.create(suscripcion=suscripcion, fecha_pago=date(2026, 4, 10), fecha_cobro=date(2026, 4, 10), monto=Decimal("8999"), moneda="ARS")
+    datos = autenticar().get("/api/suscripciones/resumen/").data
+    assert datos["pagos_fuera_de_termino"] == 1
 
 def test_campo_calculado_cobro_en_feriado(autenticar):
     crear(proxima_fecha_cobro=date(2030, 5, 25), dia_cobro=25)
