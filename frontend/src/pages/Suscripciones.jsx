@@ -13,8 +13,8 @@ import {
   estadoDeCobro,
   formatearFecha,
   formatearMonto,
-  FRECUENCIAS,
   nombreDeCategoria,
+  textoFrecuencia,
 } from '../utils/formato';
 
 const PESTANAS = [
@@ -137,7 +137,7 @@ export default function Suscripciones() {
                 <Sello nombre={s.nombre} color={colorDeCategoria(s)} />
                 <span>
                   <Link to={`/suscripciones/${s.id}`} className="tabla__nombre">{s.nombre}</Link>
-                  <span className="texto-suave">{nombreDeCategoria(s)} · {FRECUENCIAS[s.frecuencia]}</span>
+                  <span className="texto-suave">{nombreDeCategoria(s)} · {textoFrecuencia(s)}</span>
                 </span>
               </span>
               <span className="tabla__monto">{formatearMonto(s.monto, s.moneda)}</span>
