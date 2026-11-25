@@ -311,3 +311,28 @@ def test_miembro_no_puede_agregar_miembros(autenticar, grupo):
 def test_summary_del_grupo(autenticar, grupo):
     crear(USUARIO_A, grupo=grupo)
     assert autenticar(USUARIO_B).get(f"/api/grupos/{grupo.id}/summary/").data["activa"] == 1
+
+
+def test_frecuencia_personalizada_cada_n_meses(autenticar):
+    respuesta = autenticar().post("/api/suscripciones/", {
+        "nombre": "Seguro del auto", "monto": "60000", "dia_cobro": 10,
+        "frecuencia": "personalizada", "cada_meses": 6,
+    }, format="json")
+    assert respuesta.status_code == 201, respuesta.data
+    assert respuesta.data["cada_meses"] == 6
+    assert respuesta.data["costo_mensual"] == Decimal("10000.00")  # 60.000 cada 6 meses
+
+
+def test_frecuencia_personalizada_pide_cada_cuantos_meses(autenticar):
+    cliente = autenticar()
+    sin_dato = cliente.post("/api/suscripciones/", {
+        "nombre": "Seguro del auto", "monto": "60000", "dia_cobro": 10, "frecuencia": "personalizada",
+    }, format="json")
+    assert sin_dato.status_code == 400
+    assert "cada_meses" in sin_dato.data["detail"]
+
+    fuera_de_rango = cliente.post("/api/suscripciones/", {
+        "nombre": "Seguro del auto", "monto": "60000", "dia_cobro": 10,
+        "frecuencia": "personalizada", "cada_meses": 30,
+    }, format="json")
+    assert fuera_de_rango.status_code == 400

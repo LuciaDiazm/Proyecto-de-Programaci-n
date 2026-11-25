@@ -172,7 +172,7 @@ class SuscripcionService:
 
         cambios_de_fecha = any(
             campo in datos and datos[campo] != getattr(anterior, campo)
-            for campo in ("dia_cobro", "frecuencia", "fecha_inicio")
+            for campo in ("dia_cobro", "frecuencia", "cada_meses", "fecha_inicio")
         )
         se_reactiva = datos.get("estado") == "activa" and anterior.estado != "activa"
 
@@ -182,6 +182,7 @@ class SuscripcionService:
                 datos.get("fecha_inicio", anterior.fecha_inicio),
                 datos.get("frecuencia", anterior.frecuencia),
                 datos.get("dia_cobro", anterior.dia_cobro),
+                cada_meses=datos.get("cada_meses", anterior.cada_meses),
             )
 
         suscripcion = serializer.save(**extra)
@@ -249,7 +250,8 @@ class SuscripcionService:
                 cotizacion=datos.get("cotizacion") if suscripcion.moneda == "USD" else None,
             )
             suscripcion.proxima_fecha_cobro = siguiente_fecha_cobro(
-                suscripcion.proxima_fecha_cobro, suscripcion.frecuencia, suscripcion.dia_cobro
+                suscripcion.proxima_fecha_cobro, suscripcion.frecuencia, suscripcion.dia_cobro,
+                suscripcion.cada_meses,
             )
             suscripcion.save(update_fields=["proxima_fecha_cobro", "actualizado"])
 

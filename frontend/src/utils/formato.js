@@ -35,6 +35,12 @@ export function estadoDeCobro(dias) {
 }
 
 export const FRECUENCIAS = { mensual: 'Mensual', trimestral: 'Trimestral', anual: 'Anual' };
+
+// Texto de la frecuencia; la personalizada dice cada cuántos meses se cobra
+export const textoFrecuencia = (suscripcion) =>
+  suscripcion.frecuencia === 'personalizada'
+    ? `Cada ${suscripcion.cada_meses} meses`
+    : FRECUENCIAS[suscripcion.frecuencia];
 export const ESTADOS = { activa: 'Activa', pausada: 'Pausada', cancelada: 'Cancelada' };
 
 // Convierte un total separado por moneda a pesos usando la cotización (si hay)

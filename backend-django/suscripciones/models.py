@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .fechas import MESES_POR_FRECUENCIA, proximo_cobro_desde
+from .fechas import MAXIMO_MESES_PERSONALIZADOS, meses_entre_cobros, proximo_cobro_desde
 
 
 class Categoria(models.Model):
@@ -80,6 +80,7 @@ class Suscripcion(models.Model):
         ("mensual", "Mensual"),
         ("trimestral", "Trimestral"),
         ("anual", "Anual"),
+        ("personalizada", "Cada N meses"),
     ]
     ESTADO_CHOICES = [
         ("activa", "Activa"),
@@ -112,7 +113,12 @@ class Suscripcion(models.Model):
         validators=[MinValueValidator(Decimal("0.01"))],
     )
     moneda = models.CharField(max_length=3, choices=MONEDA_CHOICES, default="ARS")
-    frecuencia = models.CharField(max_length=10, choices=FRECUENCIA_CHOICES, default="mensual")
+    frecuencia = models.CharField(max_length=13, choices=FRECUENCIA_CHOICES, default="mensual")
+    # Solo se usa con frecuencia "personalizada": cada cuántos meses se cobra
+    cada_meses = models.PositiveSmallIntegerField(
+        default=1,
+        validators=[MinValueValidator(1), MaxValueValidator(MAXIMO_MESES_PERSONALIZADOS)],
+    )
     dia_cobro = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(31)]
     )
@@ -132,12 +138,14 @@ class Suscripcion(models.Model):
     @property
     def costo_mensual(self):
         """Cuánto representa por mes (una anual de 12.000 son 1.000 por mes)."""
-        meses = MESES_POR_FRECUENCIA[self.frecuencia]
+        meses = meses_entre_cobros(self.frecuencia, self.cada_meses)
         return (self.monto / meses).quantize(Decimal("0.01"))
 
     def save(self, *args, **kwargs):
         if not self.proxima_fecha_cobro:
-            self.proxima_fecha_cobro = proximo_cobro_desde(self.fecha_inicio, self.frecuencia, self.dia_cobro)
+            self.proxima_fecha_cobro = proximo_cobro_desde(
+                self.fecha_inicio, self.frecuencia, self.dia_cobro, cada_meses=self.cada_meses
+            )
         super().save(*args, **kwargs)
 
 

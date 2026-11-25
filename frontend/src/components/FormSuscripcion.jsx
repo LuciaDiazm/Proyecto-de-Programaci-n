@@ -12,6 +12,7 @@ const VACIO = {
   monto: '',
   moneda: 'ARS',
   frecuencia: 'mensual',
+  cada_meses: '2',
   dia_cobro: String(new Date().getDate()),
   fecha_inicio: hoyISO(),
   categoria: '',
@@ -26,6 +27,8 @@ const desdeSuscripcion = (suscripcion) => ({
   monto: String(suscripcion.monto),
   moneda: suscripcion.moneda,
   frecuencia: suscripcion.frecuencia,
+  // Si no es personalizada, se propone 2 por si el usuario la cambia
+  cada_meses: suscripcion.frecuencia === 'personalizada' ? String(suscripcion.cada_meses) : '2',
   dia_cobro: String(suscripcion.dia_cobro),
   fecha_inicio: suscripcion.fecha_inicio,
   categoria: suscripcion.categoria ? String(suscripcion.categoria) : '',
@@ -70,6 +73,7 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
       ...form,
       monto: form.monto.replace(',', '.'),
       dia_cobro: Number(form.dia_cobro),
+      cada_meses: form.frecuencia === 'personalizada' ? Number(form.cada_meses) : 1,
       categoria: form.categoria ? Number(form.categoria) : null,
       grupo: form.grupo ? Number(form.grupo) : null,
     };
@@ -110,8 +114,16 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
             <option value="mensual">Todos los meses</option>
             <option value="trimestral">Cada 3 meses</option>
             <option value="anual">Una vez al año</option>
+            <option value="personalizada">Cada X meses</option>
           </select>
         </label>
+        {form.frecuencia === 'personalizada' && (
+          <label className="campo">
+            <span>Cada cuántos meses</span>
+            <input name="cada_meses" type="number" min="2" max="24" value={form.cada_meses} onChange={cambiar} required />
+            <small>Por ejemplo, 6 si se paga dos veces por año.</small>
+          </label>
+        )}
         <label className="campo">
           <span>Día de cobro</span>
           <input name="dia_cobro" type="number" min="1" max="31" value={form.dia_cobro} onChange={cambiar} required />

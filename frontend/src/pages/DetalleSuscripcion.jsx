@@ -20,8 +20,8 @@ import {
   ESTADOS,
   formatearFecha,
   formatearMonto,
-  FRECUENCIAS,
   nombreDeCategoria,
+  textoFrecuencia,
 } from '../utils/formato';
 
 // Arma la lista de precios: cada cambio registrado en el historial de Node.
@@ -112,7 +112,7 @@ export default function DetalleSuscripcion() {
           </p>
           <h1>{s.nombre}</h1>
           <p className="detalle__precio">
-            {formatearMonto(s.monto, s.moneda)} <span>{FRECUENCIAS[s.frecuencia].toLowerCase()}</span>
+            {formatearMonto(s.monto, s.moneda)} <span>{textoFrecuencia(s).toLowerCase()}</span>
           </p>
           {s.descripcion && <p className="texto-suave">{s.descripcion}</p>}
         </div>
