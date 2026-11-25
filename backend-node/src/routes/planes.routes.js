@@ -15,12 +15,12 @@ import { validarCampos } from '../middlewares/validarCampos.middleware.js';
 
 const router = Router();
 
-const checkId = check('id', 'ID no valido').isMongoId();
+const checkId = check('id', 'ID no válido').isMongoId();
 
 const checksPlan = [
     check('nombre', 'El nombre es obligatorio').trim().not().isEmpty(),
-    check('precio', 'El precio debe ser un numero positivo').isFloat({ min: 0 }).toFloat(),
-    check('moneda', 'Moneda no valida').optional().isIn(['ARS', 'USD']),
+    check('precio', 'El precio debe ser un número positivo').isFloat({ min: 0 }).toFloat(),
+    check('moneda', 'Moneda no válida').optional().isIn(['ARS', 'USD']),
 ];
 
 router.use(verificarToken);
@@ -31,7 +31,7 @@ router.get('/detalle', obtenerPlanesDetallados);
 router.get('/:id', [checkId, validarCampos], obtenerPlanPorId);
 router.post('/', [
     ...checksPlan,
-    check('proveedor', 'El proveedor no es valido').isMongoId(),
+    check('proveedor', 'El proveedor no es válido').isMongoId(),
     validarCampos
 ], crearPlan);
 router.put('/:id', [checkId, ...checksPlan, validarCampos], actualizarPlan);

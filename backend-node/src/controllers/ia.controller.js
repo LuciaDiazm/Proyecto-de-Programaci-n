@@ -29,7 +29,7 @@ const normalizarResultado = (datos) => {
 export const analizarSuscripciones = async (req, res) => {
     try {
         if (!process.env.GEMINI_API_KEY) {
-            return res.status(503).json({ mensaje: "La IA no esta configurada en el servidor (falta GEMINI_API_KEY)" });
+            return res.status(503).json({ mensaje: "La IA no está configurada en el servidor (falta GEMINI_API_KEY)" });
         }
 
         // Node le pide a Django las suscripciones, reenviando el token del usuario
@@ -100,7 +100,7 @@ export const analizarSuscripciones = async (req, res) => {
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ mensaje: "Error al procesar el analisis con IA" });
+        res.status(500).json({ mensaje: "Error al procesar el análisis con IA" });
     }
 };
 
@@ -109,7 +109,7 @@ export const obtenerUltimoAnalisis = async (req, res) => {
         const analisis = await AnalisisIA.findOne({ usuario: req.usuario.id }).sort({ createdAt: -1 });
 
         if (!analisis) {
-            return res.status(404).json({ mensaje: "Todavia no hiciste ningun analisis" });
+            return res.status(404).json({ mensaje: "Todavía no hiciste ningún análisis" });
         }
 
         res.status(200).json(analisis);

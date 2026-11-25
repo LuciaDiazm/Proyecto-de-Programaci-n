@@ -18,7 +18,7 @@ router.use(verificarToken); // Todas las rutas de este archivo requieren login
 router.get('/', obtenerNotificaciones);
 router.get('/contador', contarNoLeidas);
 router.patch('/leer-todas', marcarTodasComoLeidas);
-router.patch('/:id/leida', [check('id', 'ID no valido').isMongoId(), validarCampos], marcarComoLeida);
+router.patch('/:id/leida', [check('id', 'ID no válido').isMongoId(), validarCampos], marcarComoLeida);
 router.post('/revisar', verificarRolAdmin, ejecutarRevision);
 
 export default router;

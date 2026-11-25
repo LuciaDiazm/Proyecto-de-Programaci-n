@@ -22,7 +22,7 @@ describe('Socket.IO', () => {
     it('Rechaza la conexión sin token', async () => {
         const cliente = clienteSocket(url, { reconnection: false });
         const error = await new Promise((resolver) => cliente.on('connect_error', resolver));
-        expect(error.message).toBe('Token invalido');
+        expect(error.message).toBe('Token inválido');
         cliente.close();
     });
 

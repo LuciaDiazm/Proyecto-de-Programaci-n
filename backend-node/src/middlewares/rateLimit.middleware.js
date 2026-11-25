@@ -4,7 +4,7 @@ export const limitadorGlobal = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 300,
     message: {
-        mensaje: "Has superado el limite de peticiones. Intenta nuevamente en 15 minutos"
+        mensaje: "Has superado el límite de peticiones. Intenta nuevamente en 15 minutos"
     }
 });
 
@@ -13,7 +13,7 @@ export const limitadorLogin = rateLimit({
     max: 5,
     skipSuccessfulRequests: true, // Solo cuentan los intentos fallidos
     message: {
-        mensaje: "Demasiados intentos fallidos de inicio de sesion. Intente nuevamente en 1 hora"
+        mensaje: "Demasiados intentos fallidos de inicio de sesión. Intente nuevamente en 1 hora"
     }
 });
 
@@ -21,7 +21,7 @@ export const limitadorRegistro = rateLimit({
     windowMs: 60 * 60 * 1000,
     max: 10,
     message: {
-        mensaje: "Demasiados registros desde esta conexion. Intente mas tarde"
+        mensaje: "Demasiados registros desde esta conexión. Intente más tarde"
     }
 });
 
@@ -30,6 +30,6 @@ export const limitadorIA = rateLimit({
     windowMs: 60 * 60 * 1000,
     max: 10,
     message: {
-        mensaje: "Alcanzaste el limite de analisis con IA. Intenta nuevamente en 1 hora"
+        mensaje: "Alcanzaste el límite de análisis con IA. Intenta nuevamente en 1 hora"
     }
 });

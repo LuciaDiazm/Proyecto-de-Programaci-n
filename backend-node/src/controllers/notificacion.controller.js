@@ -42,7 +42,7 @@ export const marcarComoLeida = async (req, res) => {
 
         res.status(200).json(notificacion);
     } catch (error) {
-        res.status(400).json({ mensaje: 'ID invalido', detalle: error.message });
+        res.status(400).json({ mensaje: 'ID inválido', detalle: error.message });
     }
 };
 

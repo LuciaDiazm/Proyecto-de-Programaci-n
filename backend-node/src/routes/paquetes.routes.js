@@ -12,9 +12,9 @@ router.get('/', obtenerPaquetes);
 router.post('/', [
     check('nombre', 'El nombre es obligatorio').trim().not().isEmpty(),
     check('planes', 'Debe incluir al menos un plan').isArray({ min: 1 }),
-    check('planes.*', 'ID de plan no valido').isMongoId(),
+    check('planes.*', 'ID de plan no válido').isMongoId(),
     validarCampos
 ], crearPaquete);
-router.delete('/:id', [check('id', 'ID no valido').isMongoId(), validarCampos], eliminarPaquete);
+router.delete('/:id', [check('id', 'ID no válido').isMongoId(), validarCampos], eliminarPaquete);
 
 export default router;

@@ -13,7 +13,7 @@ if (!email || !password) {
 }
 
 if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
-    console.error('La contraseña debe tener al menos 8 caracteres, con letras y numeros');
+    console.error('La contraseña debe tener al menos 8 caracteres, con letras y números');
     process.exit(1);
 }
 

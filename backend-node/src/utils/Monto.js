@@ -15,7 +15,7 @@ export class Monto {
     set valor(nuevoValor) {
         const numero = Number(nuevoValor);
         if (!Number.isFinite(numero) || numero < 0) {
-            throw new RangeError('El monto debe ser un numero positivo');
+            throw new RangeError('El monto debe ser un número positivo');
         }
         this.#valor = numero;
     }

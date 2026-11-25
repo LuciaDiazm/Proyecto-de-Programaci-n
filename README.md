@@ -532,11 +532,11 @@ Para ver cómo se protegen las rutas:
 
 | Prueba | Resultado esperado |
 |---|---|
-| Quitar el header `Authorization` en **Perfil** | `401` · "Acceso denegado. Token no valido" |
-| Usar un token vencido (pasadas las 8 h) | `401` · "El token ha expirado. Inicie sesion nuevamente" |
+| Quitar el header `Authorization` en **Perfil** | `401` · "Acceso denegado. Token no válido" |
+| Usar un token vencido (pasadas las 8 h) | `401` · "El token ha expirado. Inicie sesión nuevamente" |
 | **Eliminar proveedor** con un usuario común | `403` · "Acceso denegado, se requiere privilegios de administrador" |
-| **Registrar precio** (rutas internas) sin `X-API-KEY` | `403` · "Clave interna invalida" |
-| Login con contraseña incorrecta | `401` · "Credenciales invalidas" (no dice si el email existe) |
+| **Registrar precio** (rutas internas) sin `X-API-KEY` | `403` · "Clave interna inválida" |
+| Login con contraseña incorrecta | `401` · "Credenciales inválidas" (no dice si el email existe) |
 
 El login permite 5 intentos fallidos por hora y el registro 10 por hora.
 

@@ -11,7 +11,7 @@ export const verificarApiKey = (req, res, next) => {
         && crypto.timingSafeEqual(claveRecibida, claveEsperada);
 
     if (!esValida) {
-        return res.status(403).json({ mensaje: "Clave interna invalida" });
+        return res.status(403).json({ mensaje: "Clave interna inválida" });
     }
 
     next();
