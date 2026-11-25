@@ -17,7 +17,6 @@ No incluye: débito real de pagos, integración con bancos ni aplicación móvil
 | Modelo | Campos principales | Relaciones |
 |---|---|---|
 | Usuario | nombre, email (único), password (bcrypt, oculto), rol (USUARIO/ADMIN), diasAviso | |
-| RefreshToken | tokenHash (único), expira, revocado | usuario → Usuario |
 | Proveedor | razonSocial (mayúsculas), cuit (11 dígitos, único), contacto{email, telefono}, categorias[], calificacion (1 a 5), activo | |
 | Plan | nombre, precio, moneda, activo | proveedor → Proveedor, creadoPor → Usuario |
 | Paquete | nombre | usuario → Usuario, planes[] → Plan |
@@ -53,9 +52,8 @@ La lista completa, con acceso y descripción, está en el [README](README.md#end
 | 7 | En un grupo, los admins editan y los miembros solo leen. | 403 |
 | 8 | Cancelar una suscripción conserva sus pagos y su historial. | |
 | 9 | Si algo se cobra el día 31, en meses más cortos se cobra el último día y el mes siguiente vuelve al 31. | |
-| 10 | Un refresh token se usa una sola vez. Reutilizarlo cierra todas las sesiones del usuario. | 401 |
-| 11 | Si la API externa falla, la API responde 502 o usa el dato en caché. | 502 |
-| 12 | El WebSocket de un grupo rechaza a quien no es miembro. | Conexión cerrada |
+| 10 | Si la API externa falla, la API responde 502 o usa el dato en caché. | 502 |
+| 11 | El WebSocket de un grupo rechaza a quien no es miembro. | Conexión cerrada |
 
 ## 6. Formato de error
 
