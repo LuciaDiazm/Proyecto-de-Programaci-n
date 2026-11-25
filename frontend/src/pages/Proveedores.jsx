@@ -28,6 +28,7 @@ export default function Proveedores() {
   const [editandoId, setEditandoId] = useState(null);
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
     cargarDatos();
@@ -114,6 +115,14 @@ export default function Proveedores() {
     }
   };
 
+  // Filtra la lista por nombre o email, como el buscador de Suscripciones
+  const texto = busqueda.trim().toLowerCase();
+  const coincide = (item) => {
+    const email = item.contacto ? item.contacto.email : '';
+    return !texto || item.razonSocial.toLowerCase().includes(texto) || email.toLowerCase().includes(texto);
+  };
+  const visibles = lista ? lista.filter(coincide) : [];
+
   return (
     <>
       <header className="encabezado">
@@ -169,8 +178,23 @@ export default function Proveedores() {
       )}
 
       {lista && lista.length > 0 && (
+        <div className="filtros">
+          <input
+            className="buscador"
+            type="search"
+            placeholder="Buscar por nombre o email"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            aria-label="Buscar proveedor"
+          />
+        </div>
+      )}
+      {lista && lista.length > 0 && visibles.length === 0 && (
+        <div className="vacio vacio--chico"><p>Ningún proveedor coincide con la búsqueda.</p></div>
+      )}
+      {visibles.length > 0 && (
         <div className="tarjetas">
-          {lista.map((item) => (
+          {visibles.map((item) => (
             <ProveedorCard
               key={item._id}
               item={item}
