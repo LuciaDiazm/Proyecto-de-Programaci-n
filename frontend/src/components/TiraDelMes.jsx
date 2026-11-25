@@ -44,6 +44,9 @@ function armarDias(suscripciones, pagos, anio, mes, diasDelMes) {
   return dias;
 }
 
+// Encabezado de la grilla: la semana empieza el domingo, como getDay()
+const DIAS_SEMANA = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+
 export default function TiraDelMes({ suscripciones, pagos }) {
   const hoy = new Date();
   const anio = hoy.getFullYear();
@@ -51,6 +54,8 @@ export default function TiraDelMes({ suscripciones, pagos }) {
   const diasDelMes = new Date(anio, mes + 1, 0).getDate();
   const nombreMes = hoy.toLocaleDateString('es-AR', { month: 'long' });
   const diaHoy = hoy.getDate();
+  // Columna en la que cae el día 1 (de 1 a 7), para que cada día quede bajo su letra
+  const columnaDelUno = new Date(anio, mes, 1).getDay() + 1;
 
   const porDia = armarDias(suscripciones, pagos, anio, mes, diasDelMes);
   const pendientes = porDia.flat().filter((c) => !c.pagado).length;
@@ -67,18 +72,21 @@ export default function TiraDelMes({ suscripciones, pagos }) {
         </p>
       </div>
 
+      <div className="tira__semana" aria-hidden="true">
+        {DIAS_SEMANA.map((letra, indice) => <span key={indice}>{letra}</span>)}
+      </div>
+
       <div className="tira__dias" role="list">
         {porDia.map((cobros, indice) => {
           const dia = indice + 1;
           const clases = ['tira__dia'];
+          if (dia === 1) clases.push(`tira__dia--columna-${columnaDelUno}`);
           if (dia === diaHoy) clases.push('tira__dia--hoy');
           if (dia < diaHoy) clases.push('tira__dia--pasado');
           if (cobros.length) clases.push('tira__dia--con-cobro');
-          const diaSemana = new Date(anio, mes, dia).toLocaleDateString('es-AR', { weekday: 'narrow' });
 
           return (
             <div key={dia} className={clases.join(' ')} role="listitem">
-              <span className="tira__semana" aria-hidden="true">{diaSemana}</span>
               <span className="tira__numero">{dia}</span>
               <div className="tira__fichas">
                 {cobros.map((c) => (
