@@ -22,7 +22,7 @@ export const inicializarSockets = (httpServer) => {
             socket.usuario = payload;
             next();
         } catch {
-            next(new Error('Token invalido'));
+            next(new Error('Token inválido'));
         }
     });
 

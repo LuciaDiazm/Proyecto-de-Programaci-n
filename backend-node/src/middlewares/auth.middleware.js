@@ -5,7 +5,7 @@ export const verificarToken = (req, res, next) => {
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ mensaje: "Acceso denegado. Token no valido" });
+            return res.status(401).json({ mensaje: "Acceso denegado. Token no válido" });
         }
 
         const token = authHeader.split(' ')[1];
@@ -22,8 +22,8 @@ export const verificarToken = (req, res, next) => {
 
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({ mensaje: "El token ha expirado. Inicie sesion nuevamente" });
+            return res.status(401).json({ mensaje: "El token ha expirado. Inicie sesión nuevamente" });
         }
-        return res.status(401).json({ mensaje: "Token invalido." });
+        return res.status(401).json({ mensaje: "Token inválido." });
     }
 };

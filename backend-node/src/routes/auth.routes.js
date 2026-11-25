@@ -15,20 +15,20 @@ const router = Router();
 const checksRegistro = [
     check('nombre', 'El nombre es obligatorio').trim().not().isEmpty(),
     check('nombre', 'El nombre no puede superar los 60 caracteres').isLength({ max: 60 }),
-    check('email', 'El email no es valido').isEmail().normalizeEmail(),
+    check('email', 'El email no es válido').isEmail().normalizeEmail(),
     check('password', 'La contraseña debe tener al menos 8 caracteres').isLength({ min: 8 }),
-    check('password', 'La contraseña debe tener al menos una letra y un numero')
+    check('password', 'La contraseña debe tener al menos una letra y un número')
         .matches(/[A-Za-z]/).matches(/\d/),
 ];
 
 const checksLogin = [
-    check('email', 'El email no es valido').isEmail().normalizeEmail(),
+    check('email', 'El email no es válido').isEmail().normalizeEmail(),
     check('password', 'La contraseña es obligatoria').not().isEmpty(),
 ];
 
 const checksPerfil = [
     check('nombre', 'El nombre no puede estar vacio').optional().trim().not().isEmpty(),
-    check('diasAviso', 'Los dias de aviso deben ser un numero entre 0 y 30').optional().isInt({ min: 0, max: 30 }).toInt(),
+    check('diasAviso', 'Los días de aviso deben ser un número entre 0 y 30').optional().isInt({ min: 0, max: 30 }).toInt(),
 ];
 
 router.post('/registro', limitadorRegistro, [...checksRegistro, validarCampos], registrarUsuario);

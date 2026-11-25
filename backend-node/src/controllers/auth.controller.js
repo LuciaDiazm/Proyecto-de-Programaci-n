@@ -10,7 +10,7 @@ export const registrarUsuario = async (req, res) => {
         res.status(201).json({ mensaje: "Usuario registrado", token: generarAccessToken(usuario), usuario });
     } catch (error) {
         if (error.code === 11000) {
-            return res.status(400).json({ mensaje: "El email ya esta registrado" });
+            return res.status(400).json({ mensaje: "El email ya está registrado" });
         }
         res.status(400).json({ mensaje: "No se pudo registrar el usuario", detalle: error.message });
     }
@@ -22,11 +22,11 @@ export const login = async (req, res) => {
         // La contraseña tiene select: false, hay que pedirla explícitamente
         const usuario = await Usuario.findOne({ email }).select('+password');
         if (!usuario) {
-            return res.status(401).json({ mensaje: "Credenciales invalidas" });
+            return res.status(401).json({ mensaje: "Credenciales inválidas" });
         }
         const passwordCorrecto = await usuario.compararPassword(password);
         if (!passwordCorrecto) {
-            return res.status(401).json({ mensaje: "Credenciales invalidas" });
+            return res.status(401).json({ mensaje: "Credenciales inválidas" });
         }
         res.status(200).json({ mensaje: "Login exitoso", token: generarAccessToken(usuario), usuario });
     } catch (error) {

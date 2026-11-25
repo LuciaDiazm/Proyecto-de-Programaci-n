@@ -7,7 +7,7 @@ import { validarCampos } from '../middlewares/validarCampos.middleware.js';
 const router = Router();
 
 router.get('/interno/buscar', verificarApiKey, [
-    check('email', 'El email no es valido').isEmail().normalizeEmail(),
+    check('email', 'El email no es válido').isEmail().normalizeEmail(),
     validarCampos
 ], buscarUsuarioPorEmail);
 

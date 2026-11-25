@@ -307,31 +307,39 @@ button {
 .punto--pendiente { background: #fff; }
 .punto--pagado { border: 2px solid #6b7a8f; }
 
+/* El mes entero en una grilla de 7 columnas: se ve todo, sin deslizar */
+.tira__semana,
 .tira__dias {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(30px, 1fr);
-  gap: 2px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  scrollbar-width: thin;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.tira__semana {
+  margin-bottom: 4px;
+  font-size: 0.68rem;
+  color: #7c8798;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .tira__dia {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  min-height: 132px;
+  gap: 2px;
+  min-height: 62px;
   padding: 6px 2px 8px;
   border-radius: 10px;
 }
 
-.tira__semana {
-  font-size: 0.68rem;
-  color: #7c8798;
-  text-transform: uppercase;
-}
+/* El día 1 arranca bajo la letra que le corresponde */
+.tira__dia--columna-2 { grid-column-start: 2; }
+.tira__dia--columna-3 { grid-column-start: 3; }
+.tira__dia--columna-4 { grid-column-start: 4; }
+.tira__dia--columna-5 { grid-column-start: 5; }
+.tira__dia--columna-6 { grid-column-start: 6; }
+.tira__dia--columna-7 { grid-column-start: 7; }
 
 .tira__numero {
   font-family: var(--fuente-titulo);
@@ -348,15 +356,15 @@ button {
   background: var(--ambar);
 }
 
-.tira__dia--hoy .tira__numero,
-.tira__dia--hoy .tira__semana {
+.tira__dia--hoy .tira__numero {
   color: #2a1d00;
   font-weight: 700;
 }
 
 .tira__fichas {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 4px;
   margin-top: 4px;
 }
