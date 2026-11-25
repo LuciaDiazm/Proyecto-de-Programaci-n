@@ -19,6 +19,16 @@ MESES_POR_FRECUENCIA = {
     "anual": 12,
 }
 
+# Frecuencia "personalizada": el usuario elige cada cuántos meses (por ejemplo, cada 6)
+MAXIMO_MESES_PERSONALIZADOS = 24
+
+
+def meses_entre_cobros(frecuencia, cada_meses=None):
+    """Cada cuántos meses se cobra. En "personalizada" lo decide el usuario."""
+    if frecuencia == "personalizada":
+        return cada_meses or 1
+    return MESES_POR_FRECUENCIA[frecuencia]
+
 
 def ajustar_dia(anio, mes, dia_cobro):
     """Devuelve la fecha del mes pedido, usando el último día si el mes es más corto."""
@@ -45,12 +55,12 @@ def primera_fecha_cobro(desde, dia_cobro):
     return sumar_meses(desde, 1, dia_cobro)
 
 
-def siguiente_fecha_cobro(fecha_actual, frecuencia, dia_cobro):
+def siguiente_fecha_cobro(fecha_actual, frecuencia, dia_cobro, cada_meses=None):
     """Fecha del cobro que sigue a 'fecha_actual' según la frecuencia."""
-    return sumar_meses(fecha_actual, MESES_POR_FRECUENCIA[frecuencia], dia_cobro)
+    return sumar_meses(fecha_actual, meses_entre_cobros(frecuencia, cada_meses), dia_cobro)
 
 
-def proximo_cobro_desde(fecha_inicio, frecuencia, dia_cobro, hoy=None):
+def proximo_cobro_desde(fecha_inicio, frecuencia, dia_cobro, hoy=None, cada_meses=None):
     """
     Próximo cobro a partir de hoy para una suscripción que empezó en 'fecha_inicio'.
     Si empezó hace tiempo, se avanza período por período (así una anual que empezó
@@ -59,5 +69,5 @@ def proximo_cobro_desde(fecha_inicio, frecuencia, dia_cobro, hoy=None):
     hoy = hoy or date.today()
     fecha = primera_fecha_cobro(fecha_inicio, dia_cobro)
     while fecha < hoy:
-        fecha = siguiente_fecha_cobro(fecha, frecuencia, dia_cobro)
+        fecha = siguiente_fecha_cobro(fecha, frecuencia, dia_cobro, cada_meses)
     return fecha

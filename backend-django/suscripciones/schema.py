@@ -35,7 +35,7 @@ class SuscripcionType(DjangoObjectType):
     class Meta:
         model = Suscripcion
         fields = (
-            "id", "nombre", "descripcion", "monto", "moneda", "frecuencia", "dia_cobro",
+            "id", "nombre", "descripcion", "monto", "moneda", "frecuencia", "cada_meses", "dia_cobro",
             "proxima_fecha_cobro", "estado", "categoria", "etiquetas", "grupo", "pagos",
         )
         convert_choices_to_enum = False  # "activa" en vez de "ACTIVA", igual que en REST
@@ -100,24 +100,26 @@ class CreateSuscripcion(graphene.Mutation):
         dia_cobro = graphene.Int(required=True)
         moneda = graphene.String(default_value="ARS")
         frecuencia = graphene.String(default_value="mensual")
+        cada_meses = graphene.Int()
         grupo_id = graphene.ID()
 
     suscripcion = graphene.Field(SuscripcionType)
     ok = graphene.Boolean()
 
-    def mutate(root, info, nombre, monto, dia_cobro, moneda, frecuencia, grupo_id=None):
+    def mutate(root, info, nombre, monto, dia_cobro, moneda, frecuencia, grupo_id=None, cada_meses=None):
         usuario = info.context.user
         if not usuario.is_authenticated:
             raise GraphQLError("Autenticación requerida.")
 
+        datos = {
+            "nombre": nombre, "monto": monto, "dia_cobro": dia_cobro,
+            "moneda": moneda, "frecuencia": frecuencia, "grupo": grupo_id,
+        }
+        if cada_meses is not None:
+            datos["cada_meses"] = cada_meses
+
         # Reutilizamos las validaciones del serializer de DRF
-        serializer = SuscripcionSerializer(
-            data={
-                "nombre": nombre, "monto": monto, "dia_cobro": dia_cobro,
-                "moneda": moneda, "frecuencia": frecuencia, "grupo": grupo_id,
-            },
-            context={"request": info.context},
-        )
+        serializer = SuscripcionSerializer(data=datos, context={"request": info.context})
         if not serializer.is_valid():
             raise GraphQLError(f"Datos inválidos: {errores_de(serializer)}")
 

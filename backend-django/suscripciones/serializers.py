@@ -68,7 +68,7 @@ class SuscripcionSerializer(serializers.ModelSerializer):
         fields = [
             "id", "nombre", "descripcion", "categoria", "categoria_detalle",
             "etiquetas", "etiquetas_detalle", "grupo", "grupo_nombre",
-            "monto", "moneda", "frecuencia", "dia_cobro", "fecha_inicio",
+            "monto", "moneda", "frecuencia", "cada_meses", "dia_cobro", "fecha_inicio",
             "proxima_fecha_cobro", "estado", "costo_mensual", "dias_para_cobro",
             "cobro_en_feriado", "puede_editar", "creado", "actualizado",
         ]
@@ -119,6 +119,16 @@ class SuscripcionSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     "No se puede editar una suscripción cancelada. Reactivala primero."
                 )
+
+        # Frecuencia personalizada: hace falta saber cada cuántos meses se cobra
+        frecuencia = data.get("frecuencia", instancia.frecuencia if instancia else "mensual")
+        if frecuencia == "personalizada":
+            if "cada_meses" not in data and not (instancia and instancia.frecuencia == "personalizada"):
+                raise serializers.ValidationError(
+                    {"cada_meses": "Indicá cada cuántos meses se cobra."}
+                )
+        elif "frecuencia" in data:
+            data["cada_meses"] = 1  # En las frecuencias fijas este dato no se usa
         return data
 
 

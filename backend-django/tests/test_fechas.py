@@ -38,3 +38,9 @@ def test_suscripcion_antigua_avanza_hasta_hoy():
     # Una anual que empezó en enero se sigue cobrando en enero
     assert proximo_cobro_desde(date(2025, 1, 31), "anual", 31, hoy) == date(2027, 1, 31)
     assert proximo_cobro_desde(date(2026, 10, 6), "mensual", 6, hoy) == date(2026, 10, 6)
+
+
+def test_personalizada_cada_n_meses():
+    # Cada 6 meses, cobrando el 31: de agosto pasa a febrero (último día) y vuelve al 31
+    assert siguiente_fecha_cobro(date(2026, 8, 31), "personalizada", 31, cada_meses=6) == date(2027, 2, 28)
+    assert siguiente_fecha_cobro(date(2027, 2, 28), "personalizada", 31, cada_meses=6) == date(2027, 8, 31)
