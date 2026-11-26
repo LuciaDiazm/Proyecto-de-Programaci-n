@@ -114,6 +114,7 @@ export default function Panel() {
     total: totalEnPesos(m, dolarTarjeta).pesos,
   }));
   const mesMasCaro = Math.max(...meses.map((m) => m.total), 0);
+  const porcentajeDe = (total) => Math.round((total / mensual.pesos) * 100);
 
   let detalleDolares = '';
   if (mensual.dolaresSinConvertir > 0) {
@@ -162,9 +163,14 @@ export default function Panel() {
           <div className="bloque__cabecera">
             <h2>En qué se va</h2>
           </div>
+                    {categorias.length > 0 && (
+            <p className="texto-suave">
+              Lo que más consumís: <strong>{categorias[0].categoria}</strong> ({porcentajeDe(categorias[0].total)}%)
+            </p>
+          )}
           <ul className="reparto">
             {categorias.map((c) => {
-              const porcentaje = Math.round((c.total / mensual.pesos) * 100);
+              const porcentaje = porcentajeDe(c.total);
               return (
                 <li key={c.categoria}>
                   <Punto color={c.color} />
