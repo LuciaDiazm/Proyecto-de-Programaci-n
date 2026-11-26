@@ -32,7 +32,7 @@ export const obtenerPlanes = async (req, res) => {
 // B. Populate con selección de campos: solo lo que hace falta mostrar
 export const obtenerPlanesResumidos = async (req, res) => {
     try {
-        const planes = await Plan.find({ activo: true }).populate('proveedor', 'razonSocial cuit -_id');
+        const planes = await Plan.find({ activo: true }).populate('proveedor', 'razonSocial -_id');
         res.status(200).json(planes);
     } catch (error) {
         res.status(500).json({ mensaje: MENSAJE_500 });

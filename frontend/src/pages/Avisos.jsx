@@ -23,7 +23,8 @@ function haceCuanto(fechaISO) {
   return dias === 1 ? 'ayer' : `hace ${dias} días`;
 }
 
-export default function Avisos() {
+// enPanel: se muestra dentro del desplegable de la campana, con una cabecera más chica
+export default function Avisos({ enPanel, alCambiar }) {
   const usuario = obtenerUsuario();
   const [avisos, setAvisos] = useState(null);
   const [error, setError] = useState('');
@@ -45,11 +46,13 @@ export default function Avisos() {
     if (aviso.leida) return;
     setAvisos(avisos.map((a) => (a._id === aviso._id ? { ...a, leida: true } : a)));
     await marcarLeida(aviso._id).catch(() => {});
+    if (alCambiar) alCambiar(); // Actualiza el número de la campana
   };
 
   const marcarTodas = async () => {
     await marcarTodasLeidas();
     cargarDatos();
+    if (alCambiar) alCambiar();
   };
 
   const revisarAhora = async () => {
@@ -66,18 +69,31 @@ export default function Avisos() {
 
   return (
     <>
-      <header className="encabezado">
-        <div>
-          <TituloConAyuda titulo="Avisos">
-            Te avisamos {usuario.diasAviso} {usuario.diasAviso === 1 ? 'día' : 'días'} antes de cada cobro.{' '}
-            <Link to="/perfil">Cambiar</Link>
-          </TituloConAyuda>
+      {enPanel ? (
+        <div className="desplegable__cabecera">
+          <h2>Avisos</h2>
+          <p className="texto-suave">
+            Te avisamos {usuario.diasAviso} {usuario.diasAviso === 1 ? 'día' : 'días'} antes de cada cobro.
+          </p>
+          <div className="acciones acciones--compactas">
+            {usuario.rol === 'ADMIN' && <button className="boton boton--chico" onClick={revisarAhora}>Revisar cobros ahora</button>}
+            {hayNoLeidas && <button className="boton boton--chico" onClick={marcarTodas}>Marcar todo como leído</button>}
+          </div>
         </div>
-        <div className="acciones acciones--compactas">
-          {usuario.rol === 'ADMIN' && <button className="boton" onClick={revisarAhora}>Revisar cobros ahora</button>}
-          {hayNoLeidas && <button className="boton" onClick={marcarTodas}>Marcar todo como leído</button>}
-        </div>
-      </header>
+      ) : (
+        <header className="encabezado">
+          <div>
+            <TituloConAyuda titulo="Avisos">
+              Te avisamos {usuario.diasAviso} {usuario.diasAviso === 1 ? 'día' : 'días'} antes de cada cobro.{' '}
+              <Link to="/perfil">Cambiar</Link>
+            </TituloConAyuda>
+          </div>
+          <div className="acciones acciones--compactas">
+            {usuario.rol === 'ADMIN' && <button className="boton" onClick={revisarAhora}>Revisar cobros ahora</button>}
+            {hayNoLeidas && <button className="boton" onClick={marcarTodas}>Marcar todo como leído</button>}
+          </div>
+        </header>
+      )}
 
       {error && <p className="mensaje mensaje--error">{error}</p>}
       {!avisos && !error && <div className="esqueleto" aria-busy="true" />}

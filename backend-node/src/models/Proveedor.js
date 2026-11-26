@@ -8,19 +8,18 @@ const proveedorSchema = new mongoose.Schema({
         trim: true,
         uppercase: true
     },
-    cuit: {
-        type: String,
-        required: [true, 'El CUIT es obligatorio'],
-        unique: true,
-        match: [/^\d{11}$/, 'El CUIT debe tener exactamente 11 numeros sin guiones']
-    },
     contacto: {
         email: {
             type: String,
             required: [true, 'El email de contacto es obligatorio'],
             lowercase: true
         },
-        telefono: String
+        telefono: String,
+        // Página donde se puede hacer un reclamo (opcional)
+        urlReclamos: {
+            type: String,
+            match: [/^https?:\/\//, 'La URL de reclamos tiene que empezar con http:// o https://']
+        }
     },
     categorias: [{
         type: String,

@@ -42,7 +42,7 @@ describe('Relaciones con populate', () => {
         const { cadena, llamadas } = consultaFalsa([]);
         Plan.find.mockReturnValue(cadena);
         await request(app).get('/api/planes/resumen').set('Authorization', bearer());
-        expect(llamadas).toEqual([['proveedor', 'razonSocial cuit -_id']]);
+        expect(llamadas).toEqual([['proveedor', 'razonSocial -_id']]);
     });
 
     it('C. múltiple resuelve dos referencias', async () => {

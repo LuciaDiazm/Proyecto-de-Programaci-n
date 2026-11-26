@@ -309,6 +309,7 @@ Las demás variables de cada API se explican en su sección: [Django](#api-de-dj
 | `docker compose up` dice que no encuentra `.env.docker` | Ese archivo no viene en el repositorio | Crearlo como en el paso 1 de la [opción A](#opción-a-backend-con-docker). |
 | `port is already allocated` o `EADDRINUSE` | Otro programa usa el puerto 3000, 8000 o 5173 | Cerrar el otro programa, o la otra forma de levantar el proyecto (no correr la A y la B a la vez). |
 | Con Docker, `mongo` no arranca y dice `port is already allocated` en el 27017 | Hay un MongoDB instalado en la compu que ya usa ese puerto | Pausarlo antes de `docker compose up`: en Windows, abrir **Servicios**, buscar **MongoDB Server** y tocar **Detener**. Al terminar, se vuelve a iniciar desde el mismo lugar. Lo mismo pasa con PostgreSQL (5432) o Redis (6379) si están instalados. |
+| Al crear un segundo proveedor da error de clave duplicada (`E11000 ... cuit_1`) | La base de MongoDB se creó cuando los proveedores tenían CUIT y quedó su índice único | Borrar ese índice una sola vez (los datos no se tocan): `docker compose exec mongo mongosh aldia --eval 'db.proveedors.dropIndex("cuit_1")'`. Sin Docker, lo mismo desde `mongosh aldia`. |
 | PowerShell no deja ejecutar `.venv\Scripts\activate` | La política de scripts de Windows lo bloquea | Usar la terminal CMD, o correr antes `Set-ExecutionPolicy -Scope Process Bypass` (vale solo para esa ventana). |
 | Error de CORS en la consola del navegador | El frontend no corre en `http://localhost:5173` | Usar esa dirección, o agregar la nueva en `CORS_ORIGINS` (Node) y `CORS_ALLOWED_ORIGINS` (Django). |
 | No aparece el dólar tarjeta | La API externa (dolarapi.com) no respondió | No afecta al resto. Los montos en dólares se muestran sin convertir. |
@@ -389,7 +390,7 @@ Dentro de `backend-django`, con el entorno activado:
 pytest --cov=suscripciones
 ```
 
-Son 61 pruebas con 90 % de cobertura. Para ver el detalle en el navegador:
+Son 70 pruebas con 90 % de cobertura. Para ver el detalle en el navegador:
 
 ```bash
 pytest --cov=suscripciones --cov-report=html
@@ -455,7 +456,8 @@ Categorías y etiquetas:
 Grupos:
 
 - `GET`, `POST`, `PATCH` y `DELETE /api/grupos/`: grupos del usuario.
-- `POST /api/grupos/{id}/add-member/`: agrega un miembro (solo el admin del grupo).
+- `POST /api/grupos/{id}/add-member/`: agrega un miembro (solo el admin del grupo). Al sumar a alguien, el gasto vuelve a repartirse en partes iguales.
+- `POST /api/grupos/{id}/repartir/`: qué porcentaje del gasto paga cada miembro (solo el admin del grupo). Recibe `{"porcentajes": [{"id": 1, "porcentaje": 60}, {"id": 2, "porcentaje": 40}]}` con el id de cada membresía; tienen que estar todos y sumar 100. Con la lista vacía se vuelve a partes iguales.
 - `GET /api/grupos/{id}/summary/`: resumen del grupo.
 
 Otros:
@@ -548,7 +550,7 @@ Dentro de `backend-node`:
 npm test
 ```
 
-Son 29 pruebas en 5 archivos:
+Son 31 pruebas en 5 archivos:
 
 - `auth.test.js`: login, credenciales incorrectas, validaciones, token vencido y la ruta interna con API key.
 - `proveedores.test.js`: alta, listado, edición, calificación y borrado lógico, más los casos de error (401, 400, 403, 404 y 500).
@@ -596,7 +598,7 @@ Autenticación:
 
 Proveedores:
 
-- `GET` y `POST /api/proveedores`: listar los activos y crear.
+- `GET` y `POST /api/proveedores`: listar los activos y crear. Datos: nombre (`razonSocial`), `contacto` con email, teléfono y `urlReclamos` (página para hacer reclamos, opcional, empieza con `http://` o `https://`) y categorías. No puede haber dos proveedores activos con el mismo nombre (400 "Ya existe un proveedor con ese nombre").
 - `GET` y `PUT /api/proveedores/{id}`: ver y editar.
 - `PATCH /api/proveedores/{id}/calificar`: calificación de 1 a 5.
 - `DELETE /api/proveedores/{id}`: borrado lógico (solo ADMIN).

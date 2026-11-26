@@ -6,8 +6,12 @@ import { obtenerNoLeidas } from '../services/notificacionService';
 import { conectarNotificaciones } from '../services/socket';
 import { formatearMonto } from '../utils/formato';
 import Toast from './Toast';
+import Asesor from '../pages/Asesor';
+import Avisos from '../pages/Avisos';
+import Perfil from '../pages/Perfil';
 import {
   IconoCampana,
+  IconoCerrar,
   IconoChispa,
   IconoEdificio,
   IconoEtiqueta,
@@ -16,7 +20,6 @@ import {
   IconoLista,
   IconoPanel,
   IconoSalir,
-  IconoUsuario,
 } from './Iconos';
 
 export default function Layout() {
@@ -26,6 +29,8 @@ export default function Layout() {
   const [noLeidas, setNoLeidas] = useState(0);
   const [dolarTarjeta, setDolarTarjeta] = useState(null);
   const [toast, setToast] = useState(null);
+  // Qué desplegable de arriba está abierto: 'avisos', 'asesor', 'perfil' o null
+  const [abierto, setAbierto] = useState(null);
 
   const actualizarContador = () => {
     obtenerNoLeidas().then(setNoLeidas).catch(() => {});
@@ -50,23 +55,24 @@ export default function Layout() {
   // Al cambiar de pantalla se actualiza el contador (por ejemplo, después de leer avisos)
   useEffect(() => {
     actualizarContador();
+    setAbierto(null); // Si se navega desde un desplegable (por ejemplo, "Ver" en un aviso), se cierra
   }, [pathname]);
+
+  const alternar = (nombre) => setAbierto(abierto === nombre ? null : nombre);
 
   const cerrarSesion = () => {
     logout();
     navigate('/ingresar');
   };
 
+  // corto: el nombre que entra en la barra de abajo del celular
   const enlaces = [
     { a: '/', texto: 'Este mes', Icono: IconoPanel, fin: true },
-    { a: '/suscripciones', texto: 'Suscripciones', Icono: IconoLista },
-    { a: '/estadisticas', texto: 'Estadísticas', Icono: IconoGrafico },
-    { a: '/proveedores', texto: 'Proveedores', Icono: IconoEdificio },
+    { a: '/suscripciones', texto: 'Suscripciones', corto: 'Suscrip.', Icono: IconoLista },
+    { a: '/estadisticas', texto: 'Estadísticas', corto: 'Estadíst.', Icono: IconoGrafico },
+    { a: '/proveedores', texto: 'Proveedores', corto: 'Proveed.', Icono: IconoEdificio },
     { a: '/grupos', texto: 'Grupos', Icono: IconoGrupo },
     { a: '/etiquetas', texto: 'Etiquetas', Icono: IconoEtiqueta },
-    { a: '/avisos', texto: 'Avisos', Icono: IconoCampana, contador: noLeidas },
-    { a: '/asesor', texto: 'Asesor IA', Icono: IconoChispa },
-    { a: '/perfil', texto: 'Perfil', Icono: IconoUsuario },
   ];
   if (usuario.rol === 'ADMIN') {
     enlaces.push({ a: '/categorias', texto: 'Categorías', Icono: IconoEtiqueta });
@@ -81,15 +87,11 @@ export default function Layout() {
         </div>
 
         <nav className="nav" aria-label="Principal">
-          {enlaces.map(({ a, texto, Icono, fin, contador }) => (
-            <NavLink key={a} to={a} end={fin} className="nav__enlace">
+          {enlaces.map(({ a, texto, corto, Icono, fin }) => (
+            <NavLink key={a} to={a} end={fin} className="nav__enlace" aria-label={texto}>
               <Icono />
-              <span className="nav__texto">{texto}</span>
-              {contador > 0 && (
-                <span className="nav__contador" aria-label={`${contador} sin leer`}>
-                  {contador > 9 ? '9+' : contador}
-                </span>
-              )}
+              <span className={corto ? 'nav__texto nav__texto--largo' : 'nav__texto'}>{texto}</span>
+              {corto && <span className="nav__texto nav__texto--corto" aria-hidden="true">{corto}</span>}
             </NavLink>
           ))}
         </nav>
@@ -111,9 +113,61 @@ export default function Layout() {
         </div>
       </aside>
 
-      <main className="contenido">
-        <Outlet />
-      </main>
+      <div className="principal">
+        {/* Accesos rápidos arriba a la derecha: avisos, asesor y perfil */}
+        <header className="barra-superior">
+          <div className="marca barra-superior__marca">
+            <img src="/icono.svg" alt="" width="28" height="28" />
+            <span>Al Día</span>
+          </div>
+          <button
+            type="button"
+            className={`acceso-rapido ${abierto === 'asesor' ? 'acceso-rapido--abierto' : ''}`}
+            onClick={() => alternar('asesor')}
+          >
+            <IconoChispa />
+            <span>Asesor IA</span>
+          </button>
+          <button
+            type="button"
+            className={`acceso-rapido acceso-rapido--icono ${abierto === 'avisos' ? 'acceso-rapido--abierto' : ''}`}
+            onClick={() => alternar('avisos')}
+            aria-label={noLeidas > 0 ? `Avisos, ${noLeidas} sin leer` : 'Avisos'}
+            title="Avisos"
+          >
+            <IconoCampana />
+            {noLeidas > 0 && <span className="acceso-rapido__contador">{noLeidas > 9 ? '9+' : noLeidas}</span>}
+          </button>
+          <button
+            type="button"
+            className={`acceso-rapido acceso-rapido--icono ${abierto === 'perfil' ? 'acceso-rapido--abierto' : ''}`}
+            onClick={() => alternar('perfil')}
+            aria-label="Perfil"
+            title="Perfil"
+          >
+            <span className="usuario__avatar">{usuario.nombre.charAt(0).toUpperCase()}</span>
+          </button>
+
+          {abierto && (
+            <>
+              {/* Fondo transparente: tocar afuera del desplegable lo cierra */}
+              <button type="button" className="desplegable__fondo" onClick={() => setAbierto(null)} aria-label="Cerrar" />
+              <div className="desplegable" role="dialog">
+                <button type="button" className="boton-icono desplegable__cerrar" onClick={() => setAbierto(null)} aria-label="Cerrar">
+                  <IconoCerrar />
+                </button>
+                {abierto === 'avisos' && <Avisos enPanel alCambiar={actualizarContador} />}
+                {abierto === 'asesor' && <Asesor enPanel />}
+                {abierto === 'perfil' && <Perfil enPanel />}
+              </div>
+            </>
+          )}
+        </header>
+
+        <main className="contenido">
+          <Outlet />
+        </main>
+      </div>
 
       {toast && <Toast key={toast.id} mensaje={toast.mensaje} alCerrar={() => setToast(null)} />}
     </div>

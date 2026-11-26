@@ -5,6 +5,7 @@ import { obtenerGrupos } from '../services/grupoService';
 import { actualizarSuscripcion, crearSuscripcion } from '../services/suscripcionService';
 import { mensajeError } from '../services/api';
 import { hoyISO } from '../utils/formato';
+import { SERVICIOS_COMUNES } from '../utils/serviciosComunes';
 import Modal from './Modal';
 
 const VACIO = {
@@ -57,6 +58,14 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
 
   const cambiar = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  // Al escribir el nombre: si coincide con un servicio común, también se elige su categoría
+  const cambiarNombre = (e) => {
+    const nombre = e.target.value;
+    const servicio = SERVICIOS_COMUNES.find((s) => s.nombre === nombre);
+    const categoria = servicio ? categorias.find((c) => c.nombre === servicio.categoria) : null;
+    setForm({ ...form, nombre, categoria: categoria ? String(categoria.id) : form.categoria });
+  };
+
   // Se envían como lista de ids, por ejemplo [1, 3]
   const alternarEtiqueta = (id) => {
     const elegidas = form.etiquetas.includes(id)
@@ -93,7 +102,21 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
       <form className="formulario formulario--grilla" onSubmit={enviar}>
         <label className="campo campo--doble">
           <span>Nombre</span>
-          <input name="nombre" value={form.nombre} onChange={cambiar} placeholder="Netflix, gimnasio, seguro del auto…" autoFocus required />
+          <input
+            name="nombre"
+            value={form.nombre}
+            onChange={cambiarNombre}
+            list="servicios-comunes"
+            placeholder="Netflix, gimnasio, seguro del auto…"
+            autoComplete="off"
+            autoFocus
+            required
+          />
+          {/* datalist: el navegador sugiere estos nombres mientras se escribe */}
+          <datalist id="servicios-comunes">
+            {SERVICIOS_COMUNES.map((s) => <option key={s.nombre} value={s.nombre}>{s.categoria}</option>)}
+          </datalist>
+          {!editando && <small>Escribí y elegí de la lista, o dejá tu propio nombre.</small>}
         </label>
 
         <label className="campo">

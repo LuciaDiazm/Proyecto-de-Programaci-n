@@ -165,7 +165,7 @@ class RegistrarPagoSerializer(serializers.Serializer):
 class MembresiaSerializer(serializers.ModelSerializer):
     class Meta:
         model = MembresiaGrupo
-        fields = ["id", "usuario_id", "alias", "rol"]
+        fields = ["id", "usuario_id", "alias", "rol", "porcentaje"]
         read_only_fields = fields
 
 
@@ -200,6 +200,17 @@ class AgregarMiembroSerializer(serializers.Serializer):
 
     usuario = serializers.CharField(max_length=254)
     rol = serializers.ChoiceField(choices=MembresiaGrupo.ROL_CHOICES, default="miembro")
+
+
+class PorcentajeMiembroSerializer(serializers.Serializer):
+    id = serializers.IntegerField()  # id de la membresía
+    porcentaje = serializers.IntegerField(min_value=0, max_value=100)
+
+
+class RepartoSerializer(serializers.Serializer):
+    """Cómo se reparte el gasto del grupo. Lista vacía = volver a partes iguales."""
+
+    porcentajes = PorcentajeMiembroSerializer(many=True, allow_empty=True)
 
 
 class RegisterSerializer(serializers.ModelSerializer):

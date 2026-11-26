@@ -10,7 +10,8 @@ const ACCIONES = {
   CANCELAR: { texto: 'Cancelar', clase: 'cancelar' },
 };
 
-export default function Asesor() {
+// enPanel: se muestra dentro del desplegable de arriba, con una cabecera más chica
+export default function Asesor({ enPanel }) {
   const [analisis, setAnalisis] = useState(null);
   const [cargandoUltimo, setCargandoUltimo] = useState(true);
   const [analizando, setAnalizando] = useState(false);
@@ -40,18 +41,30 @@ export default function Asesor() {
     ? new Date(analisis.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
     : null;
 
+  const botonAnalizar = (
+    <button className="boton boton--primario" onClick={analizar} disabled={analizando}>
+      {analizando ? 'Analizando…' : analisis ? 'Analizar de nuevo' : 'Analizar mis gastos'}
+    </button>
+  );
+
   return (
     <>
-      <header className="encabezado">
-        <div>
-          <TituloConAyuda titulo="Asesor IA">
-            Revisa tus suscripciones activas y te dice cuáles se superponen, cuáles conviene revisar y cuánto podrías ahorrar.
-          </TituloConAyuda>
+      {enPanel ? (
+        <div className="desplegable__cabecera">
+          <h2>Asesor IA</h2>
+          <p className="texto-suave">Revisa tus suscripciones activas y te dice cuánto podrías ahorrar.</p>
+          {botonAnalizar}
         </div>
-        <button className="boton boton--primario" onClick={analizar} disabled={analizando}>
-          {analizando ? 'Analizando…' : analisis ? 'Analizar de nuevo' : 'Analizar mis gastos'}
-        </button>
-      </header>
+      ) : (
+        <header className="encabezado">
+          <div>
+            <TituloConAyuda titulo="Asesor IA">
+              Revisa tus suscripciones activas y te dice cuáles se superponen, cuáles conviene revisar y cuánto podrías ahorrar.
+            </TituloConAyuda>
+          </div>
+          {botonAnalizar}
+        </header>
+      )}
 
       {error && <p className="mensaje mensaje--error" role="alert">{error}</p>}
       {analizando && <div className="esqueleto esqueleto--ia" aria-busy="true" aria-label="La IA está analizando tus suscripciones" />}

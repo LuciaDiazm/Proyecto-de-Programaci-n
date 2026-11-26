@@ -62,6 +62,8 @@ class MembresiaGrupo(models.Model):
     usuario_id = models.CharField(max_length=24, db_index=True)
     alias = models.CharField(max_length=120, blank=True)  # Nombre o email para mostrar
     rol = models.CharField(max_length=10, choices=ROL_CHOICES, default="miembro")
+    # Qué parte del gasto del grupo paga este miembro. Vacío = partes iguales entre todos
+    porcentaje = models.PositiveSmallIntegerField(null=True, blank=True, validators=[MaxValueValidator(100)])
 
     class Meta:
         verbose_name_plural = "membresías de grupo"

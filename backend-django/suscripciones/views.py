@@ -29,6 +29,7 @@ from .serializers import (
     PagoSerializer,
     RegisterSerializer,
     RegistrarPagoSerializer,
+    RepartoSerializer,
     SuscripcionSerializer,
 )
 from .services import (
@@ -270,6 +271,15 @@ class GrupoViewSet(viewsets.ModelViewSet):
         usuario_id, alias = self._resolver_usuario(datos.validated_data["usuario"])
         membresia = GrupoService.agregar_miembro(grupo, usuario_id, alias, datos.validated_data["rol"])
         return Response(MembresiaSerializer(membresia).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"])
+    def repartir(self, request, pk=None):
+        """Porcentaje que paga cada miembro. get_object exige ser admin del grupo."""
+        grupo = self.get_object()
+        datos = RepartoSerializer(data=request.data)
+        datos.is_valid(raise_exception=True)
+        membresias = GrupoService.repartir(grupo, datos.validated_data["porcentajes"])
+        return Response(MembresiaSerializer(membresias, many=True).data)
 
     @action(detail=True, methods=["get"])
     def summary(self, request, pk=None):
