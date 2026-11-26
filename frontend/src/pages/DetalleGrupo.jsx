@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { IconoVolver } from '../components/Iconos';
 import Toast from '../components/Toast';
 import { mensajeError, WS_URL } from '../services/api';
-import { agregarMiembro, obtenerGrupo, obtenerResumenGrupo } from '../services/grupoService';
+import { agregarMiembro, obtenerGrupo, obtenerResumenGrupo, repartirGrupo } from '../services/grupoService';
 import { obtenerSuscripcionesDeGrupo } from '../services/suscripcionService';
 import { conectarProyecto } from '../services/tiempoReal';
 import { formatearMonto } from '../utils/formato';
@@ -13,6 +13,7 @@ const TEXTOS_EVENTO = {
   suscripcion_actualizada: 'Se modificó una suscripción',
   pago_registrado: 'Se registró un pago',
   miembro_agregado: 'Entró un miembro nuevo',
+  reparto_cambiado: 'Cambió cuánto paga cada uno',
 };
 
 const TEXTOS_CONEXION = {
@@ -32,6 +33,8 @@ export default function DetalleGrupo() {
   const [formData, setFormData] = useState({ usuario: '', rol: 'miembro' });
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
+  // null = no se está editando. Si no, guarda el porcentaje que escribió el admin para cada membresía
+  const [reparto, setReparto] = useState(null);
 
   const cargarDatos = async () => {
     try {
@@ -93,6 +96,37 @@ export default function DetalleGrupo() {
     }
   };
 
+  // Abre la edición con números enteros que ya suman 100 (con 3 miembros: 34, 33, 33)
+  const empezarReparto = () => {
+    const membresias = grupo.membresias;
+    const base = Math.floor(100 / membresias.length);
+    const sobra = 100 - base * membresias.length;
+    const inicial = {};
+    membresias.forEach((m, i) => {
+      if (m.porcentaje !== null) inicial[m.id] = String(m.porcentaje);
+      else inicial[m.id] = String(i < sobra ? base + 1 : base);
+    });
+    setReparto(inicial);
+  };
+
+  const cambiarPorcentaje = (e) => setReparto({ ...reparto, [e.target.name]: e.target.value });
+
+  const guardarReparto = async (porcentajes) => {
+    try {
+      await repartirGrupo(id, porcentajes);
+      setReparto(null);
+      setToast({ mensaje: 'Listo, se actualizó cuánto paga cada uno', id: Date.now() });
+      cargarDatos();
+    } catch (err) {
+      setToast({ mensaje: mensajeError(err), tipo: 'error', id: Date.now() });
+    }
+  };
+
+  const handleGuardarReparto = (e) => {
+    e.preventDefault();
+    guardarReparto(grupo.membresias.map((m) => ({ id: m.id, porcentaje: Number(reparto[m.id]) })));
+  };
+
   if (error) {
     return (
       <div className="vacio vacio--chico">
@@ -103,9 +137,19 @@ export default function DetalleGrupo() {
   }
   if (!grupo || !resumen) return <div className="esqueleto" aria-busy="true" />;
   
-  // Partes iguales: el total del mes dividido por la cantidad de miembros
+  // Sin porcentaje guardado, cada uno paga partes iguales
   const cantidadMiembros = grupo.membresias.length || 1;
-  const parteDe = (total) => Number(total) / cantidadMiembros;
+  const porcentajeDe = (m) => (m.porcentaje !== null ? m.porcentaje : 100 / cantidadMiembros);
+  const parteDe = (total, m) => (Number(total) * porcentajeDe(m)) / 100;
+  const hayPesos = Number(resumen.mensual.ARS) > 0;
+  const hayDolares = Number(resumen.mensual.USD) > 0;
+  const esAdmin = grupo.mi_rol === 'admin';
+  const repartoIgual = grupo.membresias.every((m) => m.porcentaje === null);
+
+  // Mientras se edita: cuánto suman los porcentajes escritos
+  const suma = reparto
+    ? grupo.membresias.reduce((total, m) => total + Number(reparto[m.id] || 0), 0)
+    : 100;
 
   return (
     <>
@@ -119,13 +163,11 @@ export default function DetalleGrupo() {
         <span className={`conexion conexion--${conexion}`} role="status">{TEXTOS_CONEXION[conexion]}</span>
       </header>
 
-      <dl className="datos datos--tres">
+      <dl className="datos">
         <div><dt>Activas</dt><dd>{resumen.activa}</dd></div>
         <div><dt>En pausa</dt><dd>{resumen.pausada}</dd></div>
         <div><dt>Por mes en pesos</dt><dd>{formatearMonto(resumen.mensual.ARS, 'ARS')}</dd></div>
         <div><dt>Por mes en dólares</dt><dd>{formatearMonto(resumen.mensual.USD, 'USD')}</dd></div>
-        <div><dt>Cada uno en pesos</dt><dd>{formatearMonto(parteDe(resumen.mensual.ARS), 'ARS')}</dd></div>
-        <div><dt>Cada uno en dólares</dt><dd>{formatearMonto(parteDe(resumen.mensual.USD), 'USD')}</dd></div>
       </dl>
 
       <div className="grilla">
@@ -163,17 +205,68 @@ export default function DetalleGrupo() {
             <h2>Miembros</h2>
             <span className="texto-suave">{grupo.membresias.length}</span>
           </div>
-          <ul className="miembros">
-            {grupo.membresias.map((m) => (
-              <li key={m.id}>
-                <span className={`punto ${enLinea.includes(m.alias) ? 'punto--activo' : ''}`} aria-hidden="true" />
-                <span>{m.alias}{enLinea.includes(m.alias) && <small className="texto-suave"> en línea</small>}</span>
-                <span className="texto-suave">{m.rol}</span>
-              </li>
-            ))}
-          </ul>
+          <p className="texto-suave">
+            {repartoIgual ? 'Pagan partes iguales.' : 'Cada uno paga el porcentaje que eligió el admin.'}
+          </p>
 
-          {grupo.mi_rol === 'admin' && (
+          <form onSubmit={handleGuardarReparto}>
+            <ul className="miembros">
+              {grupo.membresias.map((m) => (
+                <li key={m.id}>
+                  <span className={`punto ${enLinea.includes(m.alias) ? 'punto--activo' : ''}`} aria-hidden="true" />
+                  <span>
+                    {m.alias}
+                    <small className="texto-suave"> · {m.rol}{enLinea.includes(m.alias) && ' · en línea'}</small>
+                  </span>
+                  {reparto ? (
+                    <label className="reparto-grupo__campo">
+                      <input
+                        name={String(m.id)}
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={reparto[m.id]}
+                        onChange={cambiarPorcentaje}
+                        aria-label={`Porcentaje que paga ${m.alias}`}
+                      />
+                      %
+                    </label>
+                  ) : (
+                    <span className="miembros__parte">
+                      <strong>{Math.round(porcentajeDe(m) * 10) / 10}%</strong>
+                      {hayPesos && <small>{formatearMonto(parteDe(resumen.mensual.ARS, m), 'ARS')}</small>}
+                      {hayDolares && <small>{formatearMonto(parteDe(resumen.mensual.USD, m), 'USD')}</small>}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+
+            {esAdmin && !reparto && (
+              <div className="reparto-grupo">
+                <button type="button" className="boton boton--chico" onClick={empezarReparto}>
+                  Cambiar cuánto paga cada uno
+                </button>
+                {!repartoIgual && (
+                  <button type="button" className="boton boton--chico" onClick={() => guardarReparto([])}>
+                    Volver a partes iguales
+                  </button>
+                )}
+              </div>
+            )}
+
+            {reparto && (
+              <div className="reparto-grupo">
+                <span className={`reparto-grupo__suma ${suma === 100 ? '' : 'reparto-grupo__suma--mal'}`}>
+                  Suman {suma}%{suma !== 100 && ' (tiene que dar 100)'}
+                </span>
+                <button type="button" className="boton boton--chico" onClick={() => setReparto(null)}>Cancelar</button>
+                <button className="boton boton--chico boton--primario" disabled={suma !== 100}>Guardar</button>
+              </div>
+            )}
+          </form>
+
+          {esAdmin && (
             <form className="formulario" onSubmit={handleAgregar}>
               <h3 className="subtitulo">Sumar a alguien</h3>
               <label className="campo">

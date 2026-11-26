@@ -26,3 +26,9 @@ export const agregarMiembro = async (id, datos) => {
   const respuesta = await apiDjango.post(`${GRUPOS_URL}${id}/add-member/`, datos);
   return respuesta.data;
 };
+
+// porcentajes: [{ id: idDeLaMembresia, porcentaje: 60 }, ...]. Lista vacía = partes iguales
+export const repartirGrupo = async (id, porcentajes) => {
+  const respuesta = await apiDjango.post(`${GRUPOS_URL}${id}/repartir/`, { porcentajes });
+  return respuesta.data;
+};
