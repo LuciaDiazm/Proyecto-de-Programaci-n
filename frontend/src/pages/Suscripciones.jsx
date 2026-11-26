@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { obtenerSuscripciones } from '../services/suscripcionService';
+import { obtenerDolarTarjeta } from '../services/cotizacionService';
 import { mensajeError } from '../services/api';
 import FormSuscripcion from '../components/FormSuscripcion';
 import ConfirmarPago from '../components/ConfirmarPago';
@@ -15,6 +16,7 @@ import {
   formatearMonto,
   nombreDeCategoria,
   textoFrecuencia,
+  totalEnPesos,
 } from '../utils/formato';
 
 const PESTANAS = [
@@ -43,9 +45,21 @@ export default function Suscripciones() {
   const [pagando, setPagando] = useState(null);
   const [toast, setToast] = useState(null);
 
+  const [dolar, setDolar] = useState(null);
+
   useEffect(() => {
     cargarDatos();
+    cargarDolar();
   }, []);
+
+  // Si la cotización no llega, la lista se muestra igual, sin el equivalente en pesos
+  const cargarDolar = async () => {
+    try {
+      setDolar(await obtenerDolarTarjeta());
+    } catch (err) {
+      setDolar(null);
+    }
+  };
 
   const cargarDatos = async () => {
     try {
@@ -140,7 +154,12 @@ export default function Suscripciones() {
                   <span className="texto-suave">{nombreDeCategoria(s)} · {textoFrecuencia(s)}</span>
                 </span>
               </span>
-              <span className="tabla__monto">{formatearMonto(s.monto, s.moneda)}</span>
+                            <span className="tabla__monto">
+                {formatearMonto(s.monto, s.moneda)}
+                {s.moneda === 'USD' && dolar && (
+                  <small className="texto-suave"> ≈ {formatearMonto(totalEnPesos({ USD: s.monto }, dolar).pesos, 'ARS', { decimales: false })}</small>
+                )}
+              </span>
               <span className="texto-suave tabla__mensual">{formatearMonto(s.costo_mensual, s.moneda)}</span>
               <span className={`tabla__cuando cobro--${s.estado === 'activa' ? estadoDeCobro(s.dias_para_cobro) : 'normal'}`}>
                 {s.estado === 'activa' ? (
