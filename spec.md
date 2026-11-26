@@ -17,7 +17,7 @@ No incluye: débito real de pagos, integración con bancos ni aplicación móvil
 | Modelo | Campos principales | Relaciones |
 |---|---|---|
 | Usuario | nombre, email (único), password (bcrypt, oculto), rol (USUARIO/ADMIN), diasAviso | |
-| Proveedor | razonSocial (mayúsculas), cuit (11 dígitos, único), contacto{email, telefono}, categorias[], calificacion (1 a 5), activo | |
+| Proveedor | razonSocial (mayúsculas, no se repite entre los activos), contacto{email, telefono, urlReclamos}, categorias[], calificacion (1 a 5), activo | |
 | Plan | nombre, precio, moneda, activo | proveedor → Proveedor, creadoPor → Usuario |
 | Paquete | nombre | usuario → Usuario, planes[] → Plan |
 | HistorialPrecio | suscripcionId, precioAnterior, precioNuevo, moneda, variacionPorcentual, tipo | usuario → Usuario |
@@ -30,7 +30,7 @@ No incluye: débito real de pagos, integración con bancos ni aplicación móvil
 | Categoria | nombre (único), color | |
 | Etiqueta | usuario_id, nombre | |
 | Grupo | nombre, descripcion, creado_por | |
-| MembresiaGrupo | usuario_id, alias, rol (admin/miembro) | grupo → Grupo, único por grupo y usuario |
+| MembresiaGrupo | usuario_id, alias, rol (admin/miembro), porcentaje (vacío = partes iguales) | grupo → Grupo, único por grupo y usuario |
 | Suscripcion | usuario_id, nombre, monto (Decimal), moneda, frecuencia, dia_cobro, fecha_inicio, proxima_fecha_cobro, estado | categoria → Categoria, grupo → Grupo, etiquetas ↔ Etiqueta |
 | Pago | monto, moneda, cotizacion, fecha_pago, fecha_cobro | suscripcion → Suscripcion |
 | SecurityLog | evento, usuario, ip, detalle, fecha | |
@@ -45,7 +45,7 @@ La lista completa, con acceso y descripción, está en el [README](README.md#end
 |---|---|---|
 | 1 | Toda ruta de datos exige un JWT válido. | 401 |
 | 2 | El rol nunca viene del cliente: quien se registra siempre es USUARIO. | Se ignora el campo |
-| 3 | El CUIT de un proveedor tiene exactamente 11 números y no se repite. | 400 |
+| 3 | No puede haber dos proveedores activos con el mismo nombre, y la página de reclamos empieza con http:// o https://. | 400 |
 | 4 | La calificación de un proveedor es un número del 1 al 5. | 400 |
 | 5 | Borrar proveedores o planes exige rol ADMIN y el borrado es lógico. | 403 |
 | 6 | Un usuario no puede ver ni tocar suscripciones ajenas fuera de sus grupos. | 404 |
@@ -54,6 +54,7 @@ La lista completa, con acceso y descripción, está en el [README](README.md#end
 | 9 | Si algo se cobra el día 31, en meses más cortos se cobra el último día y el mes siguiente vuelve al 31. | |
 | 10 | Si la API externa falla, la API responde 502 o usa el dato en caché. | 502 |
 | 11 | El WebSocket de un grupo rechaza a quien no es miembro. | Conexión cerrada |
+| 12 | Solo el admin de un grupo elige qué porcentaje paga cada miembro; tienen que estar todos y sumar 100. | 400 / 403 |
 
 ## 6. Formato de error
 

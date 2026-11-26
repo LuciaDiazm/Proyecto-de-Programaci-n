@@ -819,7 +819,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"razonSocial\": \"Netflix Argentina\",\n  \"cuit\": \"30123456789\",\n  \"contacto\": {\n    \"email\": \"contacto@netflix.com\",\n    \"telefono\": \"1140000000\"\n  },\n  \"categorias\": [\n    \"STREAMING\"\n  ]\n}"
+              "raw": "{\n  \"razonSocial\": \"Netflix Argentina\",\n  \"contacto\": {\n    \"email\": \"contacto@netflix.com\",\n    \"telefono\": \"1140000000\",\n    \"urlReclamos\": \"https://help.netflix.com\"\n  },\n  \"categorias\": [\n    \"STREAMING\"\n  ]\n}"
             }
           },
           "event": [
@@ -907,7 +907,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"razonSocial\": \"Netflix Argentina\",\n  \"cuit\": \"30123456789\",\n  \"contacto\": {\n    \"email\": \"contacto@netflix.com\",\n    \"telefono\": \"1140000000\"\n  },\n  \"categorias\": [\n    \"STREAMING\"\n  ]\n}"
+              "raw": "{\n  \"razonSocial\": \"Netflix Argentina\",\n  \"contacto\": {\n    \"email\": \"contacto@netflix.com\",\n    \"telefono\": \"1140000000\",\n    \"urlReclamos\": \"https://help.netflix.com\"\n  },\n  \"categorias\": [\n    \"STREAMING\"\n  ]\n}"
             }
           }
         },
