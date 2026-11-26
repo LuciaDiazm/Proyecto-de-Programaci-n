@@ -17,6 +17,10 @@ export const crearGrupo = async (datos) => {
   return respuesta.data;
 };
 
+export const eliminarGrupo = async (id) => {
+  await apiDjango.delete(`${GRUPOS_URL}${id}/`);
+};
+
 export const obtenerResumenGrupo = async (id) => {
   const respuesta = await apiDjango.get(`${GRUPOS_URL}${id}/summary/`);
   return respuesta.data;

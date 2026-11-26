@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { IconoVolver } from '../components/Iconos';
 import Toast from '../components/Toast';
 import { mensajeError, WS_URL } from '../services/api';
-import { agregarMiembro, obtenerGrupo, obtenerResumenGrupo, repartirGrupo } from '../services/grupoService';
+import { agregarMiembro, eliminarGrupo, obtenerGrupo, obtenerResumenGrupo, repartirGrupo } from '../services/grupoService';
 import { obtenerSuscripcionesDeGrupo } from '../services/suscripcionService';
 import { conectarProyecto } from '../services/tiempoReal';
 import { formatearMonto } from '../utils/formato';
@@ -24,6 +24,7 @@ const TEXTOS_CONEXION = {
 
 export default function DetalleGrupo() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [grupo, setGrupo] = useState(null);
   const [resumen, setResumen] = useState(null);
   const [suscripciones, setSuscripciones] = useState([]);
@@ -83,6 +84,17 @@ export default function DetalleGrupo() {
   }, [id]);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  // Las suscripciones del grupo no se borran: vuelven a ser personales de su dueño
+  const handleBorrarGrupo = async () => {
+    if (!window.confirm(`¿Borrar el grupo "${grupo.nombre}"? Las suscripciones compartidas vuelven a ser personales.`)) return;
+    try {
+      await eliminarGrupo(id);
+      navigate('/grupos');
+    } catch (err) {
+      setToast({ mensaje: mensajeError(err), tipo: 'error', id: Date.now() });
+    }
+  };
 
   const handleAgregar = async (e) => {
     e.preventDefault();
@@ -290,6 +302,15 @@ export default function DetalleGrupo() {
               </label>
               <button className="boton boton--primario">Agregar al grupo</button>
             </form>
+          )}
+
+          {esAdmin && (
+            <div className="zona-peligro">
+              <button type="button" className="boton boton--chico boton--peligro" onClick={handleBorrarGrupo}>
+                Borrar grupo
+              </button>
+              <small className="texto-suave">Las suscripciones compartidas vuelven a ser personales.</small>
+            </div>
           )}
         </section>
       </div>

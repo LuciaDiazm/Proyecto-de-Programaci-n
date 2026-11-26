@@ -390,7 +390,7 @@ Dentro de `backend-django`, con el entorno activado:
 pytest --cov=suscripciones
 ```
 
-Son 68 pruebas con 90 % de cobertura. Para ver el detalle en el navegador:
+Son 70 pruebas con 90 % de cobertura. Para ver el detalle en el navegador:
 
 ```bash
 pytest --cov=suscripciones --cov-report=html

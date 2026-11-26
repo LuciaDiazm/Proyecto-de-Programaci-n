@@ -347,6 +347,17 @@ def test_miembro_no_puede_cambiar_el_reparto(autenticar, grupo):
     assert respuesta.status_code == 403
 
 
+def test_admin_borra_el_grupo_y_las_suscripciones_vuelven_a_ser_personales(autenticar, grupo):
+    suscripcion = crear(USUARIO_A, grupo=grupo)
+    assert autenticar(USUARIO_A).delete(f"/api/grupos/{grupo.id}/").status_code == 204
+    suscripcion.refresh_from_db()
+    assert suscripcion.grupo is None
+
+
+def test_miembro_no_puede_borrar_el_grupo(autenticar, grupo):
+    assert autenticar(USUARIO_B).delete(f"/api/grupos/{grupo.id}/").status_code == 403
+
+
 def test_al_sumar_un_miembro_se_vuelve_a_partes_iguales(autenticar, grupo):
     admin, miembro = grupo.membresias.order_by("id")
     cliente = autenticar(USUARIO_A)
