@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { obtenerUsuario } from '../services/authService';
 import { obtenerDolarTarjeta } from '../services/cotizacionService';
 import { obtenerAumentos } from '../services/historialService';
 import { obtenerPagos, obtenerPagosPorMes } from '../services/pagoService';
@@ -19,7 +18,6 @@ import { formatearFecha, formatearMonto, totalEnPesos } from '../utils/formato';
 const valorOVacio = (resultado, vacio) => (resultado.status === 'fulfilled' ? resultado.value : vacio);
 
 export default function Panel() {
-  const usuario = obtenerUsuario();
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState('');
   const [pagando, setPagando] = useState(null);
@@ -68,7 +66,6 @@ export default function Panel() {
     cargarDatos();
   };
 
-  const primerNombre = usuario.nombre.split(' ')[0];
   const avisoToast = toast && <Toast key={toast.id} mensaje={toast.mensaje} alCerrar={() => setToast(null)} />;
   const formNueva = creando && <FormSuscripcion alCerrar={() => setCreando(false)} alGuardar={alGuardarNueva} />;
 
@@ -81,7 +78,7 @@ export default function Panel() {
     return (
       <>
         <header className="encabezado">
-          <h1>Hola, {primerNombre}</h1>
+          <h1>Este mes</h1>
         </header>
         <div className="vacio">
           <h2>Empezá por tu primer gasto fijo</h2>
@@ -128,7 +125,7 @@ export default function Panel() {
     <>
       <header className="encabezado encabezado--panel">
         <div>
-          <p className="encabezado__saludo">Hola, {primerNombre}. Por mes pagás</p>
+          <p className="encabezado__saludo">Tu gasto por mes</p>
           <p className="total">{formatearMonto(mensual.pesos, 'ARS', { decimales: false })}</p>
           <p className="texto-suave">
             {detalleDolares}
