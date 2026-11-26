@@ -8,9 +8,9 @@ export default function ProveedorCard({ item, onEdit, onDelete, onCalificar }) {
   return (
     <article className="tarjeta">
       <h3 className="tarjeta__titulo">{item.razonSocial}</h3>
-      {/* Contacto rápido: tocar el email abre el correo y el link lleva a la página de reclamos */}
+      {/* El email se muestra como texto para copiarlo; el link lleva a la página de reclamos */}
       <p className="texto-suave">
-        <a href={`mailto:${contacto.email}`}>{contacto.email}</a>
+        {contacto.email}
         {contacto.telefono ? ` · ${contacto.telefono}` : ''}
       </p>
       {contacto.urlReclamos && (
