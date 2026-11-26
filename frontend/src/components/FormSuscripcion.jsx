@@ -58,12 +58,12 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
 
   const cambiar = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  // Al elegir un servicio común se completan el nombre y, si existe, la categoría
-  const elegirComun = (e) => {
-    const servicio = SERVICIOS_COMUNES.find((s) => s.nombre === e.target.value);
-    if (!servicio) return;
-    const categoria = categorias.find((c) => c.nombre === servicio.categoria);
-    setForm({ ...form, nombre: servicio.nombre, categoria: categoria ? String(categoria.id) : form.categoria });
+  // Al escribir el nombre: si coincide con un servicio común, también se elige su categoría
+  const cambiarNombre = (e) => {
+    const nombre = e.target.value;
+    const servicio = SERVICIOS_COMUNES.find((s) => s.nombre === nombre);
+    const categoria = servicio ? categorias.find((c) => c.nombre === servicio.categoria) : null;
+    setForm({ ...form, nombre, categoria: categoria ? String(categoria.id) : form.categoria });
   };
 
   // Se envían como lista de ids, por ejemplo [1, 3]
@@ -100,22 +100,23 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
   return (
     <Modal titulo={editando ? `Editar ${suscripcion.nombre}` : 'Nueva suscripción'} alCerrar={alCerrar}>
       <form className="formulario formulario--grilla" onSubmit={enviar}>
-        {!editando && (
-          <label className="campo campo--doble">
-            <span>Elegí una común (opcional)</span>
-            <select value="" onChange={elegirComun}>
-              <option value="">Netflix, Spotify, gimnasio…</option>
-              {SERVICIOS_COMUNES.map((s) => (
-                <option key={s.nombre} value={s.nombre}>{s.nombre}</option>
-              ))}
-            </select>
-            <small>Completa el nombre y la categoría. Si no está en la lista, escribila abajo.</small>
-          </label>
-        )}
-
         <label className="campo campo--doble">
           <span>Nombre</span>
-          <input name="nombre" value={form.nombre} onChange={cambiar} placeholder="Netflix, gimnasio, seguro del auto…" autoFocus={editando} required />
+          <input
+            name="nombre"
+            value={form.nombre}
+            onChange={cambiarNombre}
+            list="servicios-comunes"
+            placeholder="Netflix, gimnasio, seguro del auto…"
+            autoComplete="off"
+            autoFocus
+            required
+          />
+          {/* datalist: el navegador sugiere estos nombres mientras se escribe */}
+          <datalist id="servicios-comunes">
+            {SERVICIOS_COMUNES.map((s) => <option key={s.nombre} value={s.nombre}>{s.categoria}</option>)}
+          </datalist>
+          {!editando && <small>Escribí y elegí de la lista, o dejá tu propio nombre.</small>}
         </label>
 
         <label className="campo">
