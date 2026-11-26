@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { analizarGastos, obtenerUltimoAnalisis } from '../services/iaService';
 import { mensajeError } from '../services/api';
 import { formatearMonto } from '../utils/formato';
+import TituloConAyuda from '../components/TituloConAyuda';
 
 const ACCIONES = {
   MANTENER: { texto: 'Mantener', clase: 'mantener' },
@@ -43,10 +44,9 @@ export default function Asesor() {
     <>
       <header className="encabezado">
         <div>
-          <h1>Asesor IA</h1>
-          <p className="texto-suave">
+          <TituloConAyuda titulo="Asesor IA">
             Revisa tus suscripciones activas y te dice cuáles se superponen, cuáles conviene revisar y cuánto podrías ahorrar.
-          </p>
+          </TituloConAyuda>
         </div>
         <button className="boton boton--primario" onClick={analizar} disabled={analizando}>
           {analizando ? 'Analizando…' : analisis ? 'Analizar de nuevo' : 'Analizar mis gastos'}

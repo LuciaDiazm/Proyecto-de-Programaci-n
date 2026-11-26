@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { aFecha, colorDeCategoria, formatearMonto, iniciales } from '../utils/formato';
+import { aFecha, colorDeCategoria, formatearMonto } from '../utils/formato';
+import { IconoCheck } from './Iconos';
 import Sello from './Sello';
 
 /*
@@ -96,7 +97,8 @@ export default function TiraDelMes({ suscripciones, pagos }) {
                     className={`ficha ${c.pagado ? 'ficha--pagada' : ''}`}
                     title={`${c.nombre}: ${formatearMonto(c.monto, c.moneda)}${c.pagado ? ' (pagado)' : ''}`}
                   >
-                    {c.pagado ? iniciales(c.nombre) : <Sello nombre={c.nombre} color={c.color} tamano={27} />}
+                    {/* Lo pagado lleva un ✓ para no confundirse con un cobro pendiente gris */}
+                    {c.pagado ? <IconoCheck /> : <Sello nombre={c.nombre} color={c.color} tamano={27} />}
                   </Link>
                 ))}
               </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { actualizarCategoria, crearCategoria, eliminarCategoria, obtenerCategorias } from '../services/categoriaService';
 import { mensajeError } from '../services/api';
 import Toast from '../components/Toast';
+import TituloConAyuda from '../components/TituloConAyuda';
 
 // Solo para ADMIN (Django también lo verifica con el rol del token)
 export default function Categorias() {
@@ -61,8 +62,9 @@ export default function Categorias() {
     <>
       <header className="encabezado">
         <div>
-          <h1>Categorías</h1>
-          <p className="texto-suave">Son compartidas por todos los usuarios. Las que están en uso no se pueden borrar.</p>
+          <TituloConAyuda titulo="Categorías">
+            Son compartidas por todos los usuarios. Las que están en uso no se pueden borrar.
+          </TituloConAyuda>
         </div>
       </header>
 

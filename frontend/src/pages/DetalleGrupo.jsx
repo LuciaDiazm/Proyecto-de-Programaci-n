@@ -119,7 +119,7 @@ export default function DetalleGrupo() {
         <span className={`conexion conexion--${conexion}`} role="status">{TEXTOS_CONEXION[conexion]}</span>
       </header>
 
-      <dl className="datos">
+      <dl className="datos datos--tres">
         <div><dt>Activas</dt><dd>{resumen.activa}</dd></div>
         <div><dt>En pausa</dt><dd>{resumen.pausada}</dd></div>
         <div><dt>Por mes en pesos</dt><dd>{formatearMonto(resumen.mensual.ARS, 'ARS')}</dd></div>
@@ -143,7 +143,7 @@ export default function DetalleGrupo() {
           ) : (
             <p className="texto-suave">
               {grupo.mi_rol === 'admin'
-                ? 'Al crear una suscripción elegí este grupo para compartirla.'
+                ? `Para compartir una suscripción, creala o editala y en "Compartir con un grupo" elegí "${grupo.nombre}".`
                 : 'Todavía no hay suscripciones compartidas.'}
             </p>
           )}
@@ -175,18 +175,27 @@ export default function DetalleGrupo() {
 
           {grupo.mi_rol === 'admin' && (
             <form className="formulario" onSubmit={handleAgregar}>
+              <h3 className="subtitulo">Sumar a alguien</h3>
               <label className="campo">
-                <span>Agregar por email</span>
-                <input name="usuario" value={formData.usuario} onChange={handleChange} required />
+                <span>Email de la persona</span>
+                <input
+                  name="usuario"
+                  type="email"
+                  placeholder="nombre@gmail.com"
+                  value={formData.usuario}
+                  onChange={handleChange}
+                  required
+                />
+                <small>Tiene que tener una cuenta en Al Día.</small>
               </label>
               <label className="campo">
-                <span>Rol</span>
+                <span>Qué puede hacer</span>
                 <select name="rol" value={formData.rol} onChange={handleChange}>
-                  <option value="miembro">Miembro</option>
-                  <option value="admin">Admin</option>
+                  <option value="miembro">Miembro (solo mira)</option>
+                  <option value="admin">Admin (puede editar)</option>
                 </select>
               </label>
-              <button className="boton">Agregar</button>
+              <button className="boton boton--primario">Agregar al grupo</button>
             </form>
           )}
         </section>

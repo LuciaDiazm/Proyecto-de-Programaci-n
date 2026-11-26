@@ -15,6 +15,8 @@
   --rojo-claro: #f9e3e1;
   --foco: #2f6fde;
   --tira: #18202e;
+  --tira-texto: #7c8798;
+  --tira-borde: #46536a;
 
   --fuente-titulo: 'Bricolage Grotesque', system-ui, sans-serif;
   --fuente-texto: 'Onest', system-ui, sans-serif;
@@ -67,7 +69,7 @@ body {
 h1,
 h2 {
   font-family: var(--fuente-titulo);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.15;
   margin: 0;
   letter-spacing: -0.01em;
@@ -137,7 +139,7 @@ button {
   gap: 10px;
   padding: 0 8px;
   font-family: var(--fuente-titulo);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 1.3rem;
 }
 
@@ -258,7 +260,7 @@ button {
 /* El total mensual: el número que el usuario viene a ver */
 .total {
   font-family: var(--fuente-titulo);
-  font-weight: 700;
+  font-weight: 600;
   font-size: clamp(2.6rem, 6vw, 3.8rem);
   line-height: 1;
   letter-spacing: -0.03em;
@@ -318,7 +320,7 @@ button {
 .tira__semana {
   margin-bottom: 4px;
   font-size: 0.68rem;
-  color: #7c8798;
+  color: var(--tira-texto);
   text-align: center;
   text-transform: uppercase;
 }
@@ -358,7 +360,7 @@ button {
 
 .tira__dia--hoy .tira__numero {
   color: #2a1d00;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .tira__fichas {
@@ -391,8 +393,10 @@ button {
 .ficha--pagada {
   background: transparent;
   color: #8693a6;
-  box-shadow: inset 0 0 0 2px #46536a;
+  box-shadow: inset 0 0 0 2px var(--tira-borde);
 }
+
+.ficha--pagada svg { width: 15px; height: 15px; }
 
 .tira__dia--hoy .ficha { box-shadow: 0 0 0 2px var(--ambar); }
 
@@ -979,7 +983,7 @@ button {
 .detalle__precio {
   font-family: var(--fuente-titulo);
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 600;
   margin: 6px 0;
   font-variant-numeric: tabular-nums;
 }
@@ -1029,6 +1033,44 @@ button {
   font-weight: 600;
 }
 
+/* En el grupo hay 6 datos: 2 filas de 3, sin huecos */
+.datos--tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Título con el botón "?" que muestra su explicación */
+.titulo-ayuda {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ayuda {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--linea);
+  border-radius: 50%;
+  background: var(--superficie);
+  color: var(--tinta-suave);
+  font-family: var(--fuente-texto);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ayuda:hover,
+.ayuda--abierta {
+  border-color: var(--verde);
+  color: var(--verde);
+}
+
+.ayuda__texto {
+  max-width: 60ch;
+  margin-top: 6px;
+}
+
 .pagos {
   list-style: none;
   margin: 0;
@@ -1051,6 +1093,8 @@ button {
   align-items: flex-end;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  /* El monto no se parte en dos renglones ("$" arriba y el número abajo) */
+  white-space: nowrap;
 }
 
 /* ============ Avisos ============ */
@@ -1337,21 +1381,29 @@ button {
   .marca,
   .lateral__pie { display: none; }
 
+  /* Todas las secciones a la vista: dos filas de 5, sin tener que deslizar */
   .nav {
-    flex-direction: row;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
     width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
 
   .nav__enlace {
     position: relative;
-    flex: 0 0 auto;
     flex-direction: column;
     gap: 2px;
-    padding: 6px 8px;
-    font-size: 0.68rem;
+    min-width: 0;
+    padding: 6px 0;
+    font-size: 0.62rem;
+    text-align: center;
+  }
+
+  .nav__texto {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .nav__contador {
@@ -1363,7 +1415,7 @@ button {
     font-size: 0.65rem;
   }
 
-  .contenido { padding: 24px 16px 96px; }
+  .contenido { padding: 24px 16px 136px; }
 
   h1 { font-size: 1.6rem; }
 

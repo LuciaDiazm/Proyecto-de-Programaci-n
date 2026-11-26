@@ -4,6 +4,7 @@ import { marcarLeida, marcarTodasLeidas, obtenerNotificaciones, revisarCobros } 
 import { obtenerUsuario } from '../services/authService';
 import { mensajeError } from '../services/api';
 import Toast from '../components/Toast';
+import TituloConAyuda from '../components/TituloConAyuda';
 
 const TIPOS = {
   COBRO_PROXIMO: 'pronto',
@@ -67,11 +68,10 @@ export default function Avisos() {
     <>
       <header className="encabezado">
         <div>
-          <h1>Avisos</h1>
-          <p className="texto-suave">
+          <TituloConAyuda titulo="Avisos">
             Te avisamos {usuario.diasAviso} {usuario.diasAviso === 1 ? 'día' : 'días'} antes de cada cobro.{' '}
             <Link to="/perfil">Cambiar</Link>
-          </p>
+          </TituloConAyuda>
         </div>
         <div className="acciones acciones--compactas">
           {usuario.rol === 'ADMIN' && <button className="boton" onClick={revisarAhora}>Revisar cobros ahora</button>}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ProveedorCard from '../components/ProveedorCard';
 import Toast from '../components/Toast';
+import TituloConAyuda from '../components/TituloConAyuda';
 import { obtenerUsuario } from '../services/authService';
 import { mensajeError } from '../services/api';
 import {
@@ -127,8 +128,9 @@ export default function Proveedores() {
     <>
       <header className="encabezado">
         <div>
-          <h1>Proveedores</h1>
-          <p className="texto-suave">Las empresas que te cobran. Calificalas para acordarte con cuáles conviene seguir.</p>
+          <TituloConAyuda titulo="Proveedores">
+            Las empresas que te cobran. Calificalas para acordarte con cuáles conviene seguir.
+          </TituloConAyuda>
         </div>
       </header>
 
