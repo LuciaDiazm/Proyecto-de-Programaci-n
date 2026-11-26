@@ -8,8 +8,16 @@ export default function ProveedorCard({ item, onEdit, onDelete, onCalificar }) {
   return (
     <article className="tarjeta">
       <h3 className="tarjeta__titulo">{item.razonSocial}</h3>
-      <p className="texto-suave">CUIT {item.cuit}</p>
-      <p className="texto-suave">{contacto.email}{contacto.telefono ? ` · ${contacto.telefono}` : ''}</p>
+      {/* Contacto rápido: tocar el email abre el correo y el link lleva a la página de reclamos */}
+      <p className="texto-suave">
+        <a href={`mailto:${contacto.email}`}>{contacto.email}</a>
+        {contacto.telefono ? ` · ${contacto.telefono}` : ''}
+      </p>
+      {contacto.urlReclamos && (
+        <p>
+          <a href={contacto.urlReclamos} target="_blank" rel="noreferrer">Hacer un reclamo</a>
+        </p>
+      )}
 
       {categorias.length > 0 && (
         <ul className="insignias">

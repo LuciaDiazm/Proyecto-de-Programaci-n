@@ -16,8 +16,7 @@ const CATEGORIAS = ['STREAMING', 'SOFTWARE', 'TELEFONIA', 'SERVICIOS', 'OTROS'];
 
 const FORMULARIO_VACIO = {
   razonSocial: '',
-  cuit: '',
-  contacto: { email: '', telefono: '' },
+  contacto: { email: '', telefono: '', urlReclamos: '' },
   categorias: [],
 };
 
@@ -67,15 +66,23 @@ export default function Proveedores() {
   const reemplazarEnLista = (actualizado) =>
     setLista(lista.map((item) => (item._id === actualizado._id ? actualizado : item)));
 
+  // La URL de reclamos es opcional: si quedó vacía no se manda
+  const datosParaEnviar = () => {
+    const { email, telefono, urlReclamos } = formData.contacto;
+    const contacto = { email, telefono };
+    if (urlReclamos.trim()) contacto.urlReclamos = urlReclamos.trim();
+    return { ...formData, contacto };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     try {
       if (editandoId) {
-        reemplazarEnLista(await actualizarProveedor(editandoId, formData));
+        reemplazarEnLista(await actualizarProveedor(editandoId, datosParaEnviar()));
         mostrarToast('Proveedor actualizado');
       } else {
-        const nuevo = await crearProveedor(formData);
+        const nuevo = await crearProveedor(datosParaEnviar());
         setLista([...lista, nuevo]);
         mostrarToast('Proveedor creado');
       }
@@ -90,8 +97,11 @@ export default function Proveedores() {
     setEditandoId(item._id);
     setFormData({
       razonSocial: item.razonSocial,
-      cuit: item.cuit,
-      contacto: { email: contacto.email || '', telefono: contacto.telefono || '' },
+      contacto: {
+        email: contacto.email || '',
+        telefono: contacto.telefono || '',
+        urlReclamos: contacto.urlReclamos || '',
+      },
       categorias: item.categorias || [],
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -136,20 +146,20 @@ export default function Proveedores() {
 
       <form className="formulario formulario--grilla bloque" onSubmit={handleSubmit}>
         <label className="campo">
-          <span>Razón social</span>
-          <input name="razonSocial" value={formData.razonSocial} onChange={handleChange} required />
+          <span>Nombre</span>
+          <input name="razonSocial" value={formData.razonSocial} onChange={handleChange} placeholder="Ej: Netflix" required />
         </label>
         <label className="campo">
-          <span>CUIT (11 números, sin guiones)</span>
-          <input name="cuit" value={formData.cuit} onChange={handleChange} inputMode="numeric" pattern="\d{11}" required />
-        </label>
-        <label className="campo">
-          <span>Email de contacto</span>
-          <input name="email" type="email" value={formData.contacto.email} onChange={handleContacto} required />
+          <span>Email de soporte</span>
+          <input name="email" type="email" value={formData.contacto.email} onChange={handleContacto} placeholder="ayuda@empresa.com" required />
         </label>
         <label className="campo">
           <span>Teléfono (opcional)</span>
           <input name="telefono" value={formData.contacto.telefono} onChange={handleContacto} />
+        </label>
+        <label className="campo">
+          <span>Página para reclamos (opcional)</span>
+          <input name="urlReclamos" value={formData.contacto.urlReclamos} onChange={handleContacto} placeholder="https://…" />
         </label>
 
         <fieldset className="opciones campo--doble">
