@@ -115,6 +115,7 @@ export default function Panel() {
   }));
   const mesMasCaro = Math.max(...meses.map((m) => m.total), 0);
   const porcentajeDe = (total) => Math.round((total / mensual.pesos) * 100);
+  const fueraDeTermino = resumen.pagos_fuera_de_termino;
 
   let detalleDolares = '';
   if (mensual.dolaresSinConvertir > 0) {
@@ -189,6 +190,13 @@ export default function Panel() {
             <h2>Lo que pagaste</h2>
             <span className="texto-suave">últimos 6 meses</span>
           </div>
+                    {pagos.length > 0 && (
+            <p className="texto-suave">
+              Pagos fuera de término: <strong>{fueraDeTermino}</strong>{' '}
+              {fueraDeTermino === 1 ? 'vez' : 'veces'}
+            </p>
+          )}
+          
           {pagos.length ? (
             <ul className="reparto">
               {meses.map((m) => (
