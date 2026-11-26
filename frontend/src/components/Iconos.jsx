@@ -53,3 +53,6 @@ export const IconoEdificio = () => (
 export const IconoGrupo = () => (
   <svg {...base}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><path d="M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.5a6.5 6.5 0 0 1 3.5 5.5" /></svg>
 );
+export const IconoGrafico = () => (
+  <svg {...base}><path d="M4 20h16" /><rect x="5" y="11" width="3" height="7" rx="1" /><rect x="10.5" y="6" width="3" height="12" rx="1" /><rect x="16" y="13" width="3" height="5" rx="1" /></svg>
+);

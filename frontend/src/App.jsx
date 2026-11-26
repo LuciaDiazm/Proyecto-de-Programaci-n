@@ -13,6 +13,7 @@ import Proveedores from './pages/Proveedores';
 import Grupos from './pages/Grupos';
 import DetalleGrupo from './pages/DetalleGrupo';
 import Etiquetas from './pages/Etiquetas';
+import Estadisticas from './pages/Estadisticas';
 
 // Módulo 5: el mapa de navegación de la app
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
           <Route index element={<Panel />} />
           <Route path="suscripciones" element={<Suscripciones />} />
           <Route path="suscripciones/:id" element={<DetalleSuscripcion />} />
+          <Route path="estadisticas" element={<Estadisticas />} />
           <Route path="proveedores" element={<Proveedores />} />
           <Route path="grupos" element={<Grupos />} />
           <Route path="grupos/:id" element={<DetalleGrupo />} />
