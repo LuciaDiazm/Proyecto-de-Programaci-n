@@ -180,6 +180,8 @@ button {
   text-decoration: none;
 }
 
+.nav__texto--corto { display: none; }
+
 .nav__enlace.active {
   background: var(--verde-claro);
   color: var(--verde-hondo);
@@ -1490,6 +1492,9 @@ button {
     font-size: 0.68rem;
     text-align: center;
   }
+
+  .nav__texto--largo { display: none; }
+  .nav__texto--corto { display: inline; }
 
   .nav__texto {
     max-width: 100%;

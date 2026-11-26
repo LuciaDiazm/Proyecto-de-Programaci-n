@@ -194,7 +194,7 @@ export default function Panel() {
             {olvidados > 0 && (
               <>
                 {' '}
-                <Link to="/suscripciones">Ver cuáles</Link>
+                <Link to="/estadisticas">Ver cuáles</Link>
               </>
             )}
           </p>

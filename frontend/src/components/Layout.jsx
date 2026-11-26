@@ -65,11 +65,12 @@ export default function Layout() {
     navigate('/ingresar');
   };
 
+  // corto: el nombre que entra en la barra de abajo del celular
   const enlaces = [
     { a: '/', texto: 'Este mes', Icono: IconoPanel, fin: true },
-    { a: '/suscripciones', texto: 'Suscripciones', Icono: IconoLista },
-    { a: '/estadisticas', texto: 'Estadísticas', Icono: IconoGrafico },
-    { a: '/proveedores', texto: 'Proveedores', Icono: IconoEdificio },
+    { a: '/suscripciones', texto: 'Suscripciones', corto: 'Suscrip.', Icono: IconoLista },
+    { a: '/estadisticas', texto: 'Estadísticas', corto: 'Estadíst.', Icono: IconoGrafico },
+    { a: '/proveedores', texto: 'Proveedores', corto: 'Proveed.', Icono: IconoEdificio },
     { a: '/grupos', texto: 'Grupos', Icono: IconoGrupo },
     { a: '/etiquetas', texto: 'Etiquetas', Icono: IconoEtiqueta },
   ];
@@ -86,10 +87,11 @@ export default function Layout() {
         </div>
 
         <nav className="nav" aria-label="Principal">
-          {enlaces.map(({ a, texto, Icono, fin }) => (
-            <NavLink key={a} to={a} end={fin} className="nav__enlace">
+          {enlaces.map(({ a, texto, corto, Icono, fin }) => (
+            <NavLink key={a} to={a} end={fin} className="nav__enlace" aria-label={texto}>
               <Icono />
-              <span className="nav__texto">{texto}</span>
+              <span className={corto ? 'nav__texto nav__texto--largo' : 'nav__texto'}>{texto}</span>
+              {corto && <span className="nav__texto nav__texto--corto" aria-hidden="true">{corto}</span>}
             </NavLink>
           ))}
         </nav>
