@@ -5,7 +5,8 @@ import { mensajeError } from '../services/api';
 import Toast from '../components/Toast';
 import TituloConAyuda from '../components/TituloConAyuda';
 
-export default function Perfil() {
+// enPanel: se muestra dentro del desplegable de arriba, con una cabecera más chica
+export default function Perfil({ enPanel }) {
   const usuario = obtenerUsuario();
   const navigate = useNavigate();
   const [nombre, setNombre] = useState(usuario.nombre);
@@ -36,15 +37,22 @@ export default function Perfil() {
 
   return (
     <>
-      <header className="encabezado">
-        <div>
-          <TituloConAyuda titulo="Perfil">
-            Tus datos y cuántos días antes de cada cobro querés que te avisemos.
-          </TituloConAyuda>
+      {enPanel ? (
+        <div className="desplegable__cabecera">
+          <h2>Perfil</h2>
+          <p className="texto-suave">Tus datos y cuántos días antes de cada cobro querés que te avisemos.</p>
         </div>
-      </header>
+      ) : (
+        <header className="encabezado">
+          <div>
+            <TituloConAyuda titulo="Perfil">
+              Tus datos y cuántos días antes de cada cobro querés que te avisemos.
+            </TituloConAyuda>
+          </div>
+        </header>
+      )}
 
-      <form className="formulario bloque formulario--angosto" onSubmit={guardar}>
+      <form className={enPanel ? 'formulario' : 'formulario bloque formulario--angosto'} onSubmit={guardar}>
         <label className="campo">
           <span>Nombre</span>
           <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />

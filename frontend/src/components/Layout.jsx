@@ -6,8 +6,12 @@ import { obtenerNoLeidas } from '../services/notificacionService';
 import { conectarNotificaciones } from '../services/socket';
 import { formatearMonto } from '../utils/formato';
 import Toast from './Toast';
+import Asesor from '../pages/Asesor';
+import Avisos from '../pages/Avisos';
+import Perfil from '../pages/Perfil';
 import {
   IconoCampana,
+  IconoCerrar,
   IconoChispa,
   IconoEdificio,
   IconoEtiqueta,
@@ -24,6 +28,8 @@ export default function Layout() {
   const [noLeidas, setNoLeidas] = useState(0);
   const [dolarTarjeta, setDolarTarjeta] = useState(null);
   const [toast, setToast] = useState(null);
+  // Qué desplegable de arriba está abierto: 'avisos', 'asesor', 'perfil' o null
+  const [abierto, setAbierto] = useState(null);
 
   const actualizarContador = () => {
     obtenerNoLeidas().then(setNoLeidas).catch(() => {});
@@ -48,7 +54,10 @@ export default function Layout() {
   // Al cambiar de pantalla se actualiza el contador (por ejemplo, después de leer avisos)
   useEffect(() => {
     actualizarContador();
+    setAbierto(null); // Si se navega desde un desplegable (por ejemplo, "Ver" en un aviso), se cierra
   }, [pathname]);
+
+  const alternar = (nombre) => setAbierto(abierto === nombre ? null : nombre);
 
   const cerrarSesion = () => {
     logout();
@@ -107,22 +116,48 @@ export default function Layout() {
             <img src="/icono.svg" alt="" width="28" height="28" />
             <span>Al Día</span>
           </div>
-          <NavLink to="/asesor" className="acceso-rapido">
+          <button
+            type="button"
+            className={`acceso-rapido ${abierto === 'asesor' ? 'acceso-rapido--abierto' : ''}`}
+            onClick={() => alternar('asesor')}
+          >
             <IconoChispa />
             <span>Asesor IA</span>
-          </NavLink>
-          <NavLink
-            to="/avisos"
-            className="acceso-rapido acceso-rapido--icono"
+          </button>
+          <button
+            type="button"
+            className={`acceso-rapido acceso-rapido--icono ${abierto === 'avisos' ? 'acceso-rapido--abierto' : ''}`}
+            onClick={() => alternar('avisos')}
             aria-label={noLeidas > 0 ? `Avisos, ${noLeidas} sin leer` : 'Avisos'}
             title="Avisos"
           >
             <IconoCampana />
             {noLeidas > 0 && <span className="acceso-rapido__contador">{noLeidas > 9 ? '9+' : noLeidas}</span>}
-          </NavLink>
-          <NavLink to="/perfil" className="acceso-rapido acceso-rapido--icono" aria-label="Perfil" title="Perfil">
+          </button>
+          <button
+            type="button"
+            className={`acceso-rapido acceso-rapido--icono ${abierto === 'perfil' ? 'acceso-rapido--abierto' : ''}`}
+            onClick={() => alternar('perfil')}
+            aria-label="Perfil"
+            title="Perfil"
+          >
             <span className="usuario__avatar">{usuario.nombre.charAt(0).toUpperCase()}</span>
-          </NavLink>
+          </button>
+
+          {abierto && (
+            <>
+              {/* Fondo transparente: tocar afuera del desplegable lo cierra */}
+              <button type="button" className="desplegable__fondo" onClick={() => setAbierto(null)} aria-label="Cerrar" />
+              <div className="desplegable" role="dialog">
+                <button type="button" className="boton-icono desplegable__cerrar" onClick={() => setAbierto(null)} aria-label="Cerrar">
+                  <IconoCerrar />
+                </button>
+                {abierto === 'avisos' && <Avisos enPanel alCambiar={actualizarContador} />}
+                {abierto === 'asesor' && <Asesor enPanel />}
+                {abierto === 'perfil' && <Perfil enPanel />}
+              </div>
+            </>
+          )}
         </header>
 
         <main className="contenido">

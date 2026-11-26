@@ -21,7 +21,7 @@
   --calendario: #e9f0f7;
   --calendario-tinta: #18202e;
   --calendario-suave: #5d6879;
-  --calendario-pasado: #9aa5b4;
+  --calendario-pasado: #6f7b8c;
   --calendario-dia: #ffffff;
   --calendario-borde: #b8c3d1;
 
@@ -236,6 +236,7 @@ button {
 .principal { min-width: 0; }
 
 .barra-superior {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -262,7 +263,47 @@ button {
 }
 
 .acceso-rapido:hover { color: var(--tinta); text-decoration: none; background: var(--superficie-2); }
-.acceso-rapido.active { color: var(--verde-hondo); background: var(--verde-claro); border-color: transparent; }
+.acceso-rapido--abierto { color: var(--verde-hondo); background: var(--verde-claro); border-color: transparent; }
+
+/* Desplegables de avisos, asesor y perfil: se abren debajo de la barra, sin cambiar de pantalla */
+.desplegable__fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.desplegable {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: clamp(16px, 4vw, 48px);
+  z-index: 50;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  padding: 20px;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-modal);
+}
+
+.desplegable__cerrar { position: absolute; top: 12px; right: 12px; }
+
+.desplegable__cabecera {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-right: 36px;
+}
+
+.desplegable__cabecera h2 { margin: 0; font-size: 1.15rem; }
+.desplegable__cabecera p { margin: 0; font-size: 0.88rem; }
 
 .acceso-rapido--icono { justify-content: center; width: 40px; padding: 0; }
 .acceso-rapido--icono .usuario__avatar { width: 30px; height: 30px; font-size: 0.85rem; }
@@ -1084,6 +1125,9 @@ button {
   font-weight: 600;
 }
 
+/* Para 3 datos por fila (lo usa Estadísticas) */
+.datos--tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
 
 /* Título con el botón "?" que muestra su explicación */
 .titulo-ayuda {
@@ -1455,6 +1499,7 @@ button {
   }
 
   .barra-superior { padding: 12px 16px 0; }
+  .desplegable { right: 16px; max-height: calc(100vh - 150px); }
   .barra-superior__marca { display: flex; }
   .acceso-rapido span:not(.usuario__avatar):not(.acceso-rapido__contador) { display: none; }
   .acceso-rapido { width: 40px; padding: 0; justify-content: center; }
