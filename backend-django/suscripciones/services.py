@@ -76,6 +76,10 @@ class NotificationService:
         })
 
     @staticmethod
+    def notify_reparto_cambiado(grupo):
+        NotificationService._send(grupo.id, {"event": "reparto_cambiado"})
+
+    @staticmethod
     def _evento_suscripcion(evento, suscripcion, extra=None):
         if suscripcion.grupo_id is None:
             return  # Las suscripciones personales no tienen a quién avisar
@@ -132,9 +136,32 @@ class GrupoService:
     def agregar_miembro(grupo, usuario_id, alias, rol) -> MembresiaGrupo:
         if GrupoRepository.membresia(grupo, usuario_id).exists():
             raise ValidationError("Ese usuario ya es miembro del grupo.")
-        membresia = MembresiaGrupo.objects.create(grupo=grupo, usuario_id=usuario_id, alias=alias, rol=rol)
+        with transaction.atomic():
+            membresia = MembresiaGrupo.objects.create(grupo=grupo, usuario_id=usuario_id, alias=alias, rol=rol)
+            # Con alguien nuevo los porcentajes ya no suman 100: se vuelve a partes iguales
+            MembresiaGrupo.objects.filter(grupo=grupo).update(porcentaje=None)
         NotificationService.notify_miembro_agregado(membresia)
         return membresia
+
+    @staticmethod
+    def repartir(grupo, porcentajes) -> list:
+        """Guarda qué porcentaje del gasto paga cada miembro. Sin porcentajes = partes iguales."""
+        membresias = list(grupo.membresias.all())
+        if porcentajes:
+            nuevos = {p["id"]: p["porcentaje"] for p in porcentajes}
+            if set(nuevos) != {m.id for m in membresias}:
+                raise ValidationError("Indicá el porcentaje de cada miembro del grupo.")
+            if sum(nuevos.values()) != 100:
+                raise ValidationError("Los porcentajes tienen que sumar 100.")
+        else:
+            nuevos = {m.id: None for m in membresias}
+        # Todo o nada: nunca queda un reparto a medias
+        with transaction.atomic():
+            for membresia in membresias:
+                membresia.porcentaje = nuevos[membresia.id]
+                membresia.save(update_fields=["porcentaje"])
+        NotificationService.notify_reparto_cambiado(grupo)
+        return membresias
 
     @staticmethod
     def resumen(grupo) -> dict:

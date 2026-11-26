@@ -320,6 +320,44 @@ def test_summary_del_grupo(autenticar, grupo):
     assert autenticar(USUARIO_B).get(f"/api/grupos/{grupo.id}/summary/").data["activa"] == 1
 
 
+def test_admin_reparte_el_gasto_por_porcentaje(autenticar, grupo):
+    admin, miembro = grupo.membresias.order_by("id")
+    cliente = autenticar(USUARIO_A)
+    url = f"/api/grupos/{grupo.id}/repartir/"
+
+    # Tienen que sumar 100
+    mal = cliente.post(url, {"porcentajes": [{"id": admin.id, "porcentaje": 70}, {"id": miembro.id, "porcentaje": 20}]}, format="json")
+    assert mal.status_code == 400
+
+    # Falta un miembro
+    incompleto = cliente.post(url, {"porcentajes": [{"id": admin.id, "porcentaje": 100}]}, format="json")
+    assert incompleto.status_code == 400
+
+    bien = cliente.post(url, {"porcentajes": [{"id": admin.id, "porcentaje": 70}, {"id": miembro.id, "porcentaje": 30}]}, format="json")
+    assert bien.status_code == 200
+    assert sorted(m["porcentaje"] for m in bien.data) == [30, 70]
+
+    # Lista vacía: se vuelve a partes iguales
+    iguales = cliente.post(url, {"porcentajes": []}, format="json")
+    assert [m["porcentaje"] for m in iguales.data] == [None, None]
+
+
+def test_miembro_no_puede_cambiar_el_reparto(autenticar, grupo):
+    respuesta = autenticar(USUARIO_B).post(f"/api/grupos/{grupo.id}/repartir/", {"porcentajes": []}, format="json")
+    assert respuesta.status_code == 403
+
+
+def test_al_sumar_un_miembro_se_vuelve_a_partes_iguales(autenticar, grupo):
+    admin, miembro = grupo.membresias.order_by("id")
+    cliente = autenticar(USUARIO_A)
+    cliente.post(f"/api/grupos/{grupo.id}/repartir/", {"porcentajes": [
+        {"id": admin.id, "porcentaje": 50}, {"id": miembro.id, "porcentaje": 50},
+    ]}, format="json")
+    User.objects.create_user(username="caro", password="clave-Segura-987")
+    cliente.post(f"/api/grupos/{grupo.id}/add-member/", {"usuario": "caro"}, format="json")
+    assert list(grupo.membresias.values_list("porcentaje", flat=True)) == [None, None, None]
+
+
 def test_frecuencia_personalizada_cada_n_meses(autenticar):
     respuesta = autenticar().post("/api/suscripciones/", {
         "nombre": "Seguro del auto", "monto": "60000", "dia_cobro": 10,
