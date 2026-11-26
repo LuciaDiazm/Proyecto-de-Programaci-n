@@ -8,6 +8,7 @@ const Proveedor = jest.fn();
 Proveedor.prototype.save = jest.fn();
 Proveedor.find = jest.fn();
 Proveedor.findById = jest.fn();
+Proveedor.findOne = jest.fn();
 Proveedor.findByIdAndUpdate = jest.fn();
 jest.unstable_mockModule('../src/models/Proveedor.js', () => ({ Proveedor }));
 
@@ -15,8 +16,7 @@ const { default: app } = await import('../src/app.js');
 
 const DATOS_VALIDOS = {
     razonSocial: 'Netflix Argentina',
-    cuit: '30123456789',
-    contacto: { email: 'contacto@netflix.com' },
+    contacto: { email: 'contacto@netflix.com', urlReclamos: 'https://help.netflix.com' },
     categorias: ['STREAMING']
 };
 
@@ -85,20 +85,42 @@ describe('Controlador de Proveedores', () => {
         const respuesta = await request(app)
             .post('/api/proveedores')
             .set('Authorization', bearer())
-            .send({ cuit: '123' });
+            .send({ categorias: ['STREAMING'] });
         expect(respuesta.status).toBe(400);
         expect(respuesta.body).toHaveProperty('mensaje');
         expect(respuesta.body.error).toBe(true);
     });
 
-    it('Debería devolver 400 si el CUIT ya existe', async () => {
-        Proveedor.prototype.save.mockRejectedValue(Object.assign(new Error('dup'), { code: 11000 }));
+    it('Debería devolver 400 si ya hay un proveedor activo con ese nombre', async () => {
+        Proveedor.findOne.mockResolvedValue({ _id: 'otro-id', razonSocial: 'NETFLIX ARGENTINA' });
         const respuesta = await request(app)
             .post('/api/proveedores')
             .set('Authorization', bearer())
             .send(DATOS_VALIDOS);
         expect(respuesta.status).toBe(400);
-        expect(respuesta.body.mensaje).toBe('Ya existe un proveedor con ese CUIT');
+        expect(respuesta.body.mensaje).toBe('Ya existe un proveedor con ese nombre');
+        // Busca en mayúsculas porque así se guarda la razón social
+        expect(Proveedor.findOne).toHaveBeenCalledWith({ razonSocial: 'NETFLIX ARGENTINA', activo: true });
+        expect(Proveedor.prototype.save).not.toHaveBeenCalled();
+    });
+
+    it('Al editar, puede conservar su propio nombre (Status 200)', async () => {
+        Proveedor.findOne.mockResolvedValue({ _id: ID_PROVEEDOR, razonSocial: 'NETFLIX ARGENTINA' });
+        Proveedor.findByIdAndUpdate.mockResolvedValue(DATOS_VALIDOS);
+        const respuesta = await request(app)
+            .put(`/api/proveedores/${ID_PROVEEDOR}`)
+            .set('Authorization', bearer())
+            .send(DATOS_VALIDOS);
+        expect(respuesta.status).toBe(200);
+    });
+
+    it('Debería rechazar una URL de reclamos que no empieza con http (Status 400)', async () => {
+        const respuesta = await request(app)
+            .post('/api/proveedores')
+            .set('Authorization', bearer())
+            .send({ ...DATOS_VALIDOS, contacto: { email: 'contacto@netflix.com', urlReclamos: 'netflix.com' } });
+        expect(respuesta.status).toBe(400);
+        expect(Proveedor.findOne).not.toHaveBeenCalled();
     });
 
     it('Debería devolver 404 si el proveedor no existe', async () => {

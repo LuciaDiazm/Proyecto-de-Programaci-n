@@ -20,8 +20,10 @@ const checkId = check('id', 'ID no válido').isMongoId();
 
 const checksProveedor = [
     check('razonSocial', 'La razón social es obligatoria').trim().not().isEmpty(),
-    check('cuit', 'El CUIT debe tener exactamente 11 numeros sin guiones').matches(/^\d{11}$/),
     check('contacto.email', 'El email de contacto no es válido').isEmail(),
+    check('contacto.urlReclamos', 'La URL de reclamos tiene que empezar con http:// o https://')
+        .optional()
+        .matches(/^https?:\/\//),
     check('categorias', 'Las categorias deben ser una lista').optional().isArray(),
     check('categorias.*', 'Categoría no válida').optional().isIn(CATEGORIAS),
 ];
