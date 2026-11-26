@@ -15,6 +15,7 @@ import {
   IconoChispa,
   IconoEdificio,
   IconoEtiqueta,
+  IconoGrafico,
   IconoGrupo,
   IconoLista,
   IconoPanel,
@@ -67,6 +68,7 @@ export default function Layout() {
   const enlaces = [
     { a: '/', texto: 'Este mes', Icono: IconoPanel, fin: true },
     { a: '/suscripciones', texto: 'Suscripciones', Icono: IconoLista },
+    { a: '/estadisticas', texto: 'Estadísticas', Icono: IconoGrafico },
     { a: '/proveedores', texto: 'Proveedores', Icono: IconoEdificio },
     { a: '/grupos', texto: 'Grupos', Icono: IconoGrupo },
     { a: '/etiquetas', texto: 'Etiquetas', Icono: IconoEtiqueta },
