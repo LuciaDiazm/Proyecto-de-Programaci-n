@@ -15,7 +15,6 @@ import {
   IconoLista,
   IconoPanel,
   IconoSalir,
-  IconoUsuario,
 } from './Iconos';
 
 export default function Layout() {
@@ -62,9 +61,6 @@ export default function Layout() {
     { a: '/proveedores', texto: 'Proveedores', Icono: IconoEdificio },
     { a: '/grupos', texto: 'Grupos', Icono: IconoGrupo },
     { a: '/etiquetas', texto: 'Etiquetas', Icono: IconoEtiqueta },
-    { a: '/avisos', texto: 'Avisos', Icono: IconoCampana, contador: noLeidas },
-    { a: '/asesor', texto: 'Asesor IA', Icono: IconoChispa },
-    { a: '/perfil', texto: 'Perfil', Icono: IconoUsuario },
   ];
   if (usuario.rol === 'ADMIN') {
     enlaces.push({ a: '/categorias', texto: 'Categorías', Icono: IconoEtiqueta });
@@ -79,15 +75,10 @@ export default function Layout() {
         </div>
 
         <nav className="nav" aria-label="Principal">
-          {enlaces.map(({ a, texto, Icono, fin, contador }) => (
+          {enlaces.map(({ a, texto, Icono, fin }) => (
             <NavLink key={a} to={a} end={fin} className="nav__enlace">
               <Icono />
               <span className="nav__texto">{texto}</span>
-              {contador > 0 && (
-                <span className="nav__contador" aria-label={`${contador} sin leer`}>
-                  {contador > 9 ? '9+' : contador}
-                </span>
-              )}
             </NavLink>
           ))}
         </nav>
@@ -109,9 +100,35 @@ export default function Layout() {
         </div>
       </aside>
 
-      <main className="contenido">
-        <Outlet />
-      </main>
+      <div className="principal">
+        {/* Accesos rápidos arriba a la derecha: avisos, asesor y perfil */}
+        <header className="barra-superior">
+          <div className="marca barra-superior__marca">
+            <img src="/icono.svg" alt="" width="28" height="28" />
+            <span>Al Día</span>
+          </div>
+          <NavLink to="/asesor" className="acceso-rapido">
+            <IconoChispa />
+            <span>Asesor IA</span>
+          </NavLink>
+          <NavLink
+            to="/avisos"
+            className="acceso-rapido acceso-rapido--icono"
+            aria-label={noLeidas > 0 ? `Avisos, ${noLeidas} sin leer` : 'Avisos'}
+            title="Avisos"
+          >
+            <IconoCampana />
+            {noLeidas > 0 && <span className="acceso-rapido__contador">{noLeidas > 9 ? '9+' : noLeidas}</span>}
+          </NavLink>
+          <NavLink to="/perfil" className="acceso-rapido acceso-rapido--icono" aria-label="Perfil" title="Perfil">
+            <span className="usuario__avatar">{usuario.nombre.charAt(0).toUpperCase()}</span>
+          </NavLink>
+        </header>
+
+        <main className="contenido">
+          <Outlet />
+        </main>
+      </div>
 
       {toast && <Toast key={toast.id} mensaje={toast.mensaje} alCerrar={() => setToast(null)} />}
     </div>
