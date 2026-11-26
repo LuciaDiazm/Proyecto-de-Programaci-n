@@ -5,6 +5,7 @@ import { obtenerGrupos } from '../services/grupoService';
 import { actualizarSuscripcion, crearSuscripcion } from '../services/suscripcionService';
 import { mensajeError } from '../services/api';
 import { hoyISO } from '../utils/formato';
+import { SERVICIOS_COMUNES } from '../utils/serviciosComunes';
 import Modal from './Modal';
 
 const VACIO = {
@@ -57,6 +58,14 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
 
   const cambiar = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  // Al elegir un servicio común se completan el nombre y, si existe, la categoría
+  const elegirComun = (e) => {
+    const servicio = SERVICIOS_COMUNES.find((s) => s.nombre === e.target.value);
+    if (!servicio) return;
+    const categoria = categorias.find((c) => c.nombre === servicio.categoria);
+    setForm({ ...form, nombre: servicio.nombre, categoria: categoria ? String(categoria.id) : form.categoria });
+  };
+
   // Se envían como lista de ids, por ejemplo [1, 3]
   const alternarEtiqueta = (id) => {
     const elegidas = form.etiquetas.includes(id)
@@ -91,9 +100,22 @@ export default function FormSuscripcion({ suscripcion, alCerrar, alGuardar }) {
   return (
     <Modal titulo={editando ? `Editar ${suscripcion.nombre}` : 'Nueva suscripción'} alCerrar={alCerrar}>
       <form className="formulario formulario--grilla" onSubmit={enviar}>
+        {!editando && (
+          <label className="campo campo--doble">
+            <span>Elegí una común (opcional)</span>
+            <select value="" onChange={elegirComun}>
+              <option value="">Netflix, Spotify, gimnasio…</option>
+              {SERVICIOS_COMUNES.map((s) => (
+                <option key={s.nombre} value={s.nombre}>{s.nombre}</option>
+              ))}
+            </select>
+            <small>Completa el nombre y la categoría. Si no está en la lista, escribila abajo.</small>
+          </label>
+        )}
+
         <label className="campo campo--doble">
           <span>Nombre</span>
-          <input name="nombre" value={form.nombre} onChange={cambiar} placeholder="Netflix, gimnasio, seguro del auto…" autoFocus required />
+          <input name="nombre" value={form.nombre} onChange={cambiar} placeholder="Netflix, gimnasio, seguro del auto…" autoFocus={editando} required />
         </label>
 
         <label className="campo">

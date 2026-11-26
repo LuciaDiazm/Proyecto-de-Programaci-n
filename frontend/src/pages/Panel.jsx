@@ -113,6 +113,8 @@ export default function Panel() {
   const mesMasCaro = Math.max(...meses.map((m) => m.total), 0);
   const porcentajeDe = (total) => Math.round((total / mensual.pesos) * 100);
   const fueraDeTermino = resumen.pagos_fuera_de_termino;
+  // Cobros que ya vencieron y todavía no se registraron como pagados
+  const olvidados = suscripciones.filter((s) => s.estado === 'activa' && s.dias_para_cobro < 0).length;
 
   let detalleDolares = '';
   if (mensual.dolaresSinConvertir > 0) {
@@ -161,7 +163,7 @@ export default function Panel() {
           <div className="bloque__cabecera">
             <h2>En qué se va</h2>
           </div>
-                    {categorias.length > 0 && (
+          {categorias.length > 0 && (
             <p className="texto-suave">
               Lo que más consumís: <strong>{categorias[0].categoria}</strong> ({porcentajeDe(categorias[0].total)}%)
             </p>
@@ -187,13 +189,19 @@ export default function Panel() {
             <h2>Lo que pagaste</h2>
             <span className="texto-suave">últimos 6 meses</span>
           </div>
-                    {pagos.length > 0 && (
-            <p className="texto-suave">
-              Pagos fuera de término: <strong>{fueraDeTermino}</strong>{' '}
-              {fueraDeTermino === 1 ? 'vez' : 'veces'}
-            </p>
-          )}
-          
+          <p className="texto-suave">
+            Pagos fuera de término: <strong>{fueraDeTermino}</strong> {fueraDeTermino === 1 ? 'vez' : 'veces'}
+          </p>
+          <p className="texto-suave">
+            Cobros que olvidaste pagar: <strong>{olvidados}</strong>
+            {olvidados > 0 && (
+              <>
+                {' '}
+                <Link to="/suscripciones">Ver cuáles</Link>
+              </>
+            )}
+          </p>
+
           {pagos.length ? (
             <ul className="reparto">
               {meses.map((m) => (
