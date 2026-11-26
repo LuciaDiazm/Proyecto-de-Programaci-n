@@ -51,6 +51,14 @@ export function totalEnPesos(totales, cotizacion) {
   return { pesos: ars + usd * cotizacion, dolaresSinConvertir: 0 };
 }
 
+// Gasto mensual en pesos de cada categoría, de mayor a menor (lo usan el panel y Estadísticas)
+export function gastoPorCategoria(porCategoria, cotizacion) {
+  return porCategoria
+    .map((c) => ({ ...c, total: totalEnPesos(c, cotizacion).pesos }))
+    .filter((c) => c.total > 0)
+    .sort((a, b) => b.total - a.total);
+}
+
 // Una suscripción puede no tener categoría: en ese caso se usa gris y "Sin categoría"
 export const COLOR_SIN_CATEGORIA = '#64748B';
 
