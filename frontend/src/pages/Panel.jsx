@@ -114,6 +114,8 @@ export default function Panel() {
     total: totalEnPesos(m, dolarTarjeta).pesos,
   }));
   const mesMasCaro = Math.max(...meses.map((m) => m.total), 0);
+  const porcentajeDe = (total) => Math.round((total / mensual.pesos) * 100);
+  const fueraDeTermino = resumen.pagos_fuera_de_termino;
 
   let detalleDolares = '';
   if (mensual.dolaresSinConvertir > 0) {
@@ -162,9 +164,14 @@ export default function Panel() {
           <div className="bloque__cabecera">
             <h2>En qué se va</h2>
           </div>
+                    {categorias.length > 0 && (
+            <p className="texto-suave">
+              Lo que más consumís: <strong>{categorias[0].categoria}</strong> ({porcentajeDe(categorias[0].total)}%)
+            </p>
+          )}
           <ul className="reparto">
             {categorias.map((c) => {
-              const porcentaje = Math.round((c.total / mensual.pesos) * 100);
+              const porcentaje = porcentajeDe(c.total);
               return (
                 <li key={c.categoria}>
                   <Punto color={c.color} />
@@ -183,6 +190,13 @@ export default function Panel() {
             <h2>Lo que pagaste</h2>
             <span className="texto-suave">últimos 6 meses</span>
           </div>
+                    {pagos.length > 0 && (
+            <p className="texto-suave">
+              Pagos fuera de término: <strong>{fueraDeTermino}</strong>{' '}
+              {fueraDeTermino === 1 ? 'vez' : 'veces'}
+            </p>
+          )}
+          
           {pagos.length ? (
             <ul className="reparto">
               {meses.map((m) => (

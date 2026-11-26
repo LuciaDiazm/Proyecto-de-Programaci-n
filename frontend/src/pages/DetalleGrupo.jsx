@@ -102,6 +102,10 @@ export default function DetalleGrupo() {
     );
   }
   if (!grupo || !resumen) return <div className="esqueleto" aria-busy="true" />;
+  
+  // Partes iguales: el total del mes dividido por la cantidad de miembros
+  const cantidadMiembros = grupo.membresias.length || 1;
+  const parteDe = (total) => Number(total) / cantidadMiembros;
 
   return (
     <>
@@ -120,6 +124,8 @@ export default function DetalleGrupo() {
         <div><dt>En pausa</dt><dd>{resumen.pausada}</dd></div>
         <div><dt>Por mes en pesos</dt><dd>{formatearMonto(resumen.mensual.ARS, 'ARS')}</dd></div>
         <div><dt>Por mes en dólares</dt><dd>{formatearMonto(resumen.mensual.USD, 'USD')}</dd></div>
+        <div><dt>Cada uno en pesos</dt><dd>{formatearMonto(parteDe(resumen.mensual.ARS), 'ARS')}</dd></div>
+        <div><dt>Cada uno en dólares</dt><dd>{formatearMonto(parteDe(resumen.mensual.USD), 'USD')}</dd></div>
       </dl>
 
       <div className="grilla">
