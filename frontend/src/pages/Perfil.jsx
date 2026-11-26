@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { actualizarPerfil, logout, obtenerUsuario } from '../services/authService';
 import { mensajeError } from '../services/api';
 import Toast from '../components/Toast';
+import TituloConAyuda from '../components/TituloConAyuda';
 
 export default function Perfil() {
   const usuario = obtenerUsuario();
@@ -36,7 +37,11 @@ export default function Perfil() {
   return (
     <>
       <header className="encabezado">
-        <h1>Perfil</h1>
+        <div>
+          <TituloConAyuda titulo="Perfil">
+            Tus datos y cuántos días antes de cada cobro querés que te avisemos.
+          </TituloConAyuda>
+        </div>
       </header>
 
       <form className="formulario bloque formulario--angosto" onSubmit={guardar}>

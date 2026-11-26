@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { crearGrupo, obtenerGrupos } from '../services/grupoService';
 import { mensajeError } from '../services/api';
 import Toast from '../components/Toast';
+import TituloConAyuda from '../components/TituloConAyuda';
 
 const FORMULARIO_VACIO = { nombre: '', descripcion: '' };
 
@@ -37,8 +38,11 @@ export default function Grupos() {
     <>
       <header className="encabezado">
         <div>
-          <h1>Grupos</h1>
-          <p className="texto-suave">Compartí gastos fijos con tu familia o tu equipo. Los admins editan; los miembros miran.</p>
+          <TituloConAyuda titulo="Grupos">
+            Compartí gastos fijos con tu familia o tu equipo. Para sumar a alguien, tiene que tener una cuenta en Al Día.
+            Para compartir una suscripción, al crearla o editarla elegí el grupo en el campo Compartir con un grupo. Los
+            admins editan; los miembros solo miran.
+          </TituloConAyuda>
         </div>
       </header>
 

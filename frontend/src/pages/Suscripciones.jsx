@@ -7,6 +7,7 @@ import FormSuscripcion from '../components/FormSuscripcion';
 import ConfirmarPago from '../components/ConfirmarPago';
 import Sello from '../components/Sello';
 import Toast from '../components/Toast';
+import TituloConAyuda from '../components/TituloConAyuda';
 import { IconoCheck, IconoMas } from '../components/Iconos';
 import {
   colorDeCategoria,
@@ -84,7 +85,12 @@ export default function Suscripciones() {
   return (
     <>
       <header className="encabezado">
-        <h1>Suscripciones</h1>
+        <div>
+          <TituloConAyuda titulo="Suscripciones">
+            Todas tus suscripciones. Tocá el nombre para ver el detalle y el historial de precios, y el ✓ para registrar
+            un pago.
+          </TituloConAyuda>
+        </div>
         <button className="boton boton--primario" onClick={() => setCreando(true)}>
           <IconoMas /> Agregar
         </button>
