@@ -12,7 +12,7 @@ import FormSuscripcion from '../components/FormSuscripcion';
 import Punto from '../components/Punto';
 import Toast from '../components/Toast';
 import { IconoFlechaArriba, IconoMas } from '../components/Iconos';
-import { formatearFecha, formatearMonto, totalEnPesos } from '../utils/formato';
+import { formatearFecha, formatearMonto, gastoPorCategoria, totalEnPesos } from '../utils/formato';
 
 // Si una de las peticiones falló, se usa un valor vacío para que el resto del panel se vea igual
 const valorOVacio = (resultado, vacio) => (resultado.status === 'fulfilled' ? resultado.value : vacio);
@@ -100,10 +100,7 @@ export default function Panel() {
     .slice(0, 6);
 
   // Cuánto se lleva cada categoría del total mensual (de mayor a menor)
-  const categorias = resumen.por_categoria
-    .map((c) => ({ ...c, total: totalEnPesos(c, dolarTarjeta).pesos }))
-    .filter((c) => c.total > 0)
-    .sort((a, b) => b.total - a.total);
+  const categorias = gastoPorCategoria(resumen.por_categoria, dolarTarjeta);
 
   // Lo pagado en cada uno de los últimos meses
   const meses = porMes.map((m) => ({
